@@ -6,7 +6,6 @@
 #include <cassert>
 
 #include "../basic/Bem.hpp"
-#include "Triplet.hpp"
 
 namespace Bem {
 

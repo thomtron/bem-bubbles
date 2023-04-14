@@ -1,5 +1,5 @@
-#ifndef CONCONSIM_HPP
-#define CONCONSIM_HPP
+#ifndef CONCONGALERKINSIM_HPP
+#define CONCONGALERKINSIM_HPP
 
 #include <iostream>
 
@@ -9,10 +9,10 @@
 
 namespace Bem {
 
-class ConConSim : public Simulation {
+class ConConGalerkinSim : public Simulation {
 public:
 
-    ConConSim(Mesh const& initial,real p_inf = 0.0, real epsilon = 1.0, real gamma = 1.0, real sigma = 0.0)
+    ConConGalerkinSim(Mesh const& initial,real p_inf = 0.0, real epsilon = 1.0, real gamma = 1.0, real sigma = 0.0)
         :Simulation(initial,p_inf,epsilon,gamma,sigma) {
             phi = Eigen::VectorXd::Zero(phi_dim());
             psi = Eigen::VectorXd::Zero(psi_dim());
@@ -28,7 +28,7 @@ public:
         return mesh.trigs.size();
     }
 
-    virtual ~ConConSim() {}
+    virtual ~ConConGalerkinSim() {}
 
     virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
     virtual void evolve_system(real dp, bool fixdt = false) override {
@@ -42,4 +42,4 @@ private:
 
 } // namespace Bem
 
-#endif // CONCONSIM_HPP
+#endif // CONCONGALERKINSIM_HPP

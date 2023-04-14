@@ -1,4 +1,4 @@
-#include "ConConSim.hpp"
+#include "ConConGalerkinSim.hpp"
 #include "../Integration/Integrator.hpp"
 #include "../Mesh/FittingTool.hpp"
 #include "../basic/Bem.hpp"
@@ -13,10 +13,8 @@ using namespace chrono;
 #endif
 using namespace Bem;
 
-// NOTE!! HIER SIND IMMER NOCH VERALTETE FUNKTIONEN ENTHALTEN - UPDATEN BEVOR INS CMAKELISTS INCLUDEN!
 
-
-void ConConSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const {
+void ConConGalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const {
 #ifdef VERBOSE
     auto start = high_resolution_clock::now();
 #endif
@@ -59,30 +57,10 @@ void ConConSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh co
 
 
     return;
-
-
-
-
-
-    /*
-
-    for(size_t i(0);i<m.trigs.size();++i) {
-        for(size_t j(0);j<m.trigs.size();++j) {
-            inter.integrate_Con(m.verts,m.trigs[i],m.trigs[j],G(i,j),H(i,j));
-        }
-#ifdef VERBOSE
-        cout << " Assembling matrices... progress: " << float(i+1)/m.trigs.size()*100.0 << "%                                    \r" << flush;
-#endif
-    }
-#ifdef VERBOSE
-    cout << endl;
-    auto end = high_resolution_clock::now();
-    cout << "used time = " << duration_cast<duration<double>>(end-start).count() << " s. " << endl;
-#endif*/
 }
 
 
-CoordVec ConConSim::position_t(Mesh const& m,PotVec const& pot) const {
+CoordVec ConConGalerkinSim::position_t(Mesh const& m,PotVec const& pot) const {
     
     Eigen::MatrixXd G,H;
     assemble_matrices(G,H,m);
@@ -114,7 +92,7 @@ CoordVec ConConSim::position_t(Mesh const& m,PotVec const& pot) const {
 #include <set>
 
 // compute approximation to per vertex tangent gradient
-vector<vec3> ConConSim::generate_tangent_gradients(Mesh const& m, vector<real> const& pot) const {
+vector<vec3> ConConGalerkinSim::generate_tangent_gradients(Mesh const& m, vector<real> const& pot) const {
     
     vector<vector<size_t>> neighbours = generate_neighbours(m);
     vector<vector<size_t>> trig_inds = generate_triangle_indices(m);
@@ -160,16 +138,12 @@ vector<vec3> ConConSim::generate_tangent_gradients(Mesh const& m, vector<real> c
         vec3 normal(fit.get_normal());
         fit.compute_quadratic_fit(normal,m.verts[i],positions); // just to have exactly the same coord system as below
         
-        //cout << endl << '(';
         CoordSystem system(fit.copy_coord_system());
         for(size_t j(0);j<positions.size();++j) {
             vec3 trans = system.transform(positions[j]);
             trans.z = potentials[j];
             positions[j] = trans;
-
-            //cout << trans << ") (";
         }
-        //cout << ')' << endl;
 
 
         // I think this is not so rigorous (see Wang 2014)
@@ -177,41 +151,9 @@ vector<vec3> ConConSim::generate_tangent_gradients(Mesh const& m, vector<real> c
         vector<real> params(fit.get_params());
         CoordSystem system2(fit.copy_coord_system());
 
-        //for(real elm : params)
-        //    cout << elm << " _ ";
-        //cout << endl;
         vec3 tangrad = system.world_coords_relative(system2.world_coords_relative(params[1],params[2],0.0));
-
-        //cout << tangrad << endl;
 
         gradients.push_back(tangrad);
     }
     return gradients;
 }
-
-
-/*
-void ConConSim::evolve_system(real dp) {
-
-    real dt = dp; // Note, here one could insert adaptive timestepping!
-
-    vector<vec3> gradients;
-
-    mesh.generate_triangle_normals(); // to ensure there are normals
-    for(size_t i(0);i<mesh.N();++i) {
-        vec3 approx_gradient;
-        float num(0.0);
-        for(size_t t : mesh.triangle_indices[i]){
-            // "-=" due to normals that point to exteriour
-            approx_gradient -= mesh.triangle_normals[t]*psi(t);
-            num++;
-        }
-        approx_gradient *= (1.0/num);
-
-        gradients.push_back(approx_gradient);
-
-        mesh.vertices[i] += approx_gradient*dt;
-    }
-    //evolve_potential(dt,gradients);
-}
-*/

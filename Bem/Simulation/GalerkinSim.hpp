@@ -13,8 +13,8 @@ namespace Bem {
 class GalerkinSim : public LinLinSim {
 public:
 
-    GalerkinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*waveform)(vec3 x,real t) = &default_waveform)
-        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,waveform) {
+    GalerkinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
+        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield) {
             inter.set_quadrature(quadrature_7);
             inter.set_quadrature(gauss_7);
 #ifdef VERBOSE

@@ -2,6 +2,7 @@
 #define BEM_HPP
 
 #include "vector3d.hpp"
+#include "Triplet.hpp"
 
 namespace Bem {
     using real = double;

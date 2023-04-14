@@ -34,9 +34,12 @@ array_t RK4(func_t f, array_t const& x, real dt) {
     return x + dt/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
 }
 
+// two typedefs that are useful for representing scalar functions 
+// and vector fields on the bubble surface
 using CoordVec = std::vector<vec3>;
 using PotVec = std::vector<real>;
 
+// The following templates enable basic arithmetic with std-vectors of values
 template<typename T>
 std::vector<T> operator*(real s,std::vector<T> vec) {
     for(T& elm : vec)
@@ -56,27 +59,30 @@ std::vector<T> operator+(std::vector<T> const& v1,std::vector<T> v2) {
     return v2;
 }
 
-std::vector<real> make_copy(Eigen::VectorXd const& vec);
 
+// functions for translating between PotVec and Eigen::VectorXd
+std::vector<real> make_copy(Eigen::VectorXd const& vec);
 Eigen::VectorXd make_copy(std::vector<real> const& vec);
 
-real default_waveform(vec3 x,real t);
+// default pressure field
+real default_field(vec3 x,real t);
 
 class Simulation {
 public:
 
-    Simulation(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*waveform)(vec3 x,real t) = &default_waveform)
+    Simulation(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
         :p_inf(p_inf), 
         epsilon(epsilon),  
         sigma(sigma), 
         gamma(gamma),
-        waveform(waveform),
+        pressurefield(pressurefield),
         time(0.0),
         min_dt(-1.0),
         dp_balance(3.0),
         bicgstab(true),
         num_threads(100),
         mesh(initial) {
+            // initializing other default values:
             V_0 = volume(initial);
 
             inter.set_quadrature(quadrature_7);
@@ -84,35 +90,48 @@ public:
 
 #ifdef VERBOSE
             std::cout << "Simulation initialized with N = " << mesh.verts.size() << " vertices and M = " << mesh.trigs.size() << " triangles." << std::endl;
+            std::cout << " p_inf:   " << p_inf << std::endl;
             std::cout << " epsilon: " << epsilon << std::endl;
             std::cout << " sigma:   " << sigma << std::endl;
-            std::cout << " gamma:  " << gamma << std::endl;
+            std::cout << " gamma:   " << gamma << std::endl;
 #endif
         }
 
     virtual ~Simulation() {}
 
+    // dimensions of the approximation spaces describing phi resp. psi
     virtual size_t phi_dim() const = 0;
     virtual size_t psi_dim() const = 0;
 
+    // function that fills the system matrices G and H corresponding to a mesh m.
     virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const = 0;
     // if no other mesh is specified, the mesh describing the current state of the simulation is used:
     void assemble_matrices_prop(Eigen::MatrixXd& G,Eigen::MatrixXd& H) const {
         assemble_matrices(G,H,mesh);
     }
 
+    // solving the system G*psi = H_phi = H*phi for psi (returned vector)
     Eigen::VectorXd solve_system(Eigen::MatrixXd const& G,Eigen::VectorXd const& H_phi) const;
 
+    // This function only computes the psi values without evolving the system in time
     void compute_psi() {
         Eigen::MatrixXd G,H;
         assemble_matrices_prop(G,H);
         psi = solve_system(G,H*phi);
     }
 
+    // function that handels the time evolution of the system: must be defined in subclasses
     virtual void evolve_system(real dp, bool fixdt = false) = 0;
 
+
+    // function to export the mesh representing the bubble's current geometry together
+    // with the values of phi and psi on its vertices
     void export_mesh(std::string fname) const;
+    // this function allows to export another set of scalar vertex data instead of phi and psi
     void export_mesh_values(std::string fname,std::vector<real> values) const;
+
+
+    // getter and setter functions to get/set the main state variables of the system:
 
     void set_phi(std::vector<real> const& value) {
         assert(value.size() == phi_dim());
@@ -155,7 +174,6 @@ public:
         return mesh.verts;
     }
 
-    // consider using psi.data() or similar instead of creating a new vector
     std::vector<real> get_psi() {
         return make_copy(psi);
     }
@@ -191,6 +209,7 @@ public:
 protected:
 
     real get_dt(real dp,std::vector<vec3> const& gradients, std::vector<real> const& grad_potential) const;
+    // time derivative of the potential
     real potential_t(real grad_squared, real volume, real kappa, vec3 pos, real t) const;
 
 
@@ -204,7 +223,7 @@ protected:
     real V_0;
 
     // wave informations:
-    real (*waveform)(vec3 x,real t);
+    real (*pressurefield)(vec3 x,real t);
 
     // simulation time:
     real time;

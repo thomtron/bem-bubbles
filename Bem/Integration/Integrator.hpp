@@ -4,7 +4,6 @@
 
 #include <vector>
 #include "../basic/Bem.hpp"
-#include "../Mesh/Triplet.hpp"
 #include "Interpolator.hpp"
 #include "Cubic.hpp"
 #include "ResultTypes.hpp"

@@ -15,8 +15,8 @@ namespace Bem {
 class ColocSim : public LinLinSim {
 public:
 
-    ColocSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*waveform)(vec3 x,real t) = &default_waveform)
-        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,waveform) {
+    ColocSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
+        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield) {
             
 #ifdef VERBOSE
             std::cout << "This simulation has linear elements for phi and psi." << std::endl;

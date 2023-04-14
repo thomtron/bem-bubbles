@@ -22,7 +22,10 @@ int main() {
     // importing/adding meshes to M
 
     vector<Bem::real> vals;
-    import_ply("../../first-tries/python-code/icosphere-ning/icos/ico-11.ply",M,vals);
+    import_ply("../../first-tries/python-code/icosphere-ning/icos/ico-7.ply",M,vals);
+
+    M.add(M,vec3(2.0,0.0,0.0));
+    M.add(M,vec3(1.0,1.0,0.0));
 
 
     //Bem::real L = 8.2230;
@@ -69,7 +72,7 @@ int main() {
         
         
         for(size_t j(0);j<substeps;++j) {
-            sim.evolve_system_RK4(dp);
+            sim.evolve_system(dp);
             //sim.remesh(0.15);
             /*
             Mesh tmp = sim.mesh;
@@ -117,7 +120,7 @@ int main() {
 
         sim.export_mesh("meshes/mesh-"+to_string(i)+".ply");
 
-        if(i%10== 0) sim.remesh(0.1);
+        if(i%10== 0) sim.remesh(0.2);
 
         /*
         if(int(sim.get_time()/0.05)>remesh_ind) {

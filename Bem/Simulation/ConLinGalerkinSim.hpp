@@ -1,5 +1,5 @@
-#ifndef CONLINSIM_HPP
-#define CONLINSIM_HPP
+#ifndef CONLINGALERKINSIM_HPP
+#define CONLINGALERKINSIM_HPP
 
 #include <iostream>
 #include <vector>
@@ -10,10 +10,10 @@
 
 namespace Bem {
 
-class ConLinSim : public Simulation {
+class ConLinGalerkinSim : public Simulation {
 public:
 
-    ConLinSim(Mesh const& initial,real p_inf = 0.0, real epsilon = 1.0, real gamma = 1.0, real sigma = 0.0)
+    ConLinGalerkinSim(Mesh const& initial,real p_inf = 0.0, real epsilon = 1.0, real gamma = 1.0, real sigma = 0.0)
         :Simulation(initial,p_inf,epsilon,gamma,sigma) {
             phi = Eigen::VectorXd::Zero(phi_dim());
             psi = Eigen::VectorXd::Zero(psi_dim());
@@ -22,7 +22,7 @@ public:
 #endif
         }
 
-    virtual ~ConLinSim() {}
+    virtual ~ConLinGalerkinSim() {}
 
     virtual size_t phi_dim() const override {
         return mesh.verts.size();
@@ -43,4 +43,4 @@ private:
 
 } // namespace Bem
 
-#endif // CONLINSIM_HPP
+#endif // CONLINGALERKINSIM_HPP

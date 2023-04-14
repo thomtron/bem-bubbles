@@ -16,8 +16,8 @@ namespace Bem {
 class LinLinSim : public Simulation {
 public:
 
-    LinLinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*waveform)(vec3 x,real t) = &default_waveform)
-        :Simulation(initial,p_inf,epsilon,sigma,gamma,waveform),
+    LinLinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
+        :Simulation(initial,p_inf,epsilon,sigma,gamma,pressurefield),
         damping_factor(0.0),
         min_elm_size(0.0) {
             phi = Eigen::VectorXd::Zero(phi_dim());

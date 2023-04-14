@@ -33,7 +33,7 @@ Eigen::VectorXd make_copy(vector<real> const& vec) {
     return result;
 }
 
-real default_waveform(vec3 x,real t) {
+real default_field(vec3 x,real t) {
     return x.dot(vec3()) + t*0.0; // avoid warnings for not using x and t
 }
 
@@ -74,16 +74,7 @@ Eigen::VectorXd Simulation::solve_system(Eigen::MatrixXd const& G,Eigen::VectorX
 }
 
 real Simulation::potential_t(real grad_squared, real volume, real kappa,vec3 pos, real t) const {
-    /*
-    cout << "---- vals ----" << endl;
-    cout << 2.0*sigma*kappa << endl;
-    cout << 0.5*grad_squared << endl;
-    cout << p_inf << endl;
-    cout << epsilon*pow(V_0/volume,gamma) << endl;
-    cout << waveform(pos,t) << endl;
-    cout << 2.0*sigma*kappa + 0.5*grad_squared + p_inf - epsilon*pow(V_0/volume,gamma) + waveform(pos,t) << endl;
-    */
-    return  2.0*sigma*kappa + 0.5*grad_squared + p_inf - epsilon*pow(V_0/volume,gamma) + waveform(pos,t);
+    return  2.0*sigma*kappa + 0.5*grad_squared + p_inf - epsilon*pow(V_0/volume,gamma) + pressurefield(pos,t);
 }
 
 real Simulation::get_dt(real dp,std::vector<vec3> const& gradients, std::vector<real> const& grad_potential) const {
