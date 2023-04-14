@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/main.dir/main.cpp.o -o main  Bem/Simulation/libsimulation.a Bem/Integration/libintegration.a Bem/Mesh/libmesh.a /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.a 
