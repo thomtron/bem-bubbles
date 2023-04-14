@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmesh.a CMakeFiles/mesh.dir/Mesh.cpp.o CMakeFiles/mesh.dir/HalfedgeMesh.cpp.o CMakeFiles/mesh.dir/MeshIO.cpp.o CMakeFiles/mesh.dir/MeshManip.cpp.o CMakeFiles/mesh.dir/FittingTool.cpp.o
+/usr/bin/ranlib libmesh.a

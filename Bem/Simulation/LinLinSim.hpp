@@ -1,0 +1,81 @@
+#ifndef LINLINSIM_HPP
+#define LINLINSIM_HPP
+
+#include <iostream>
+#include <vector>
+
+#include "Simulation.hpp"
+
+#include <Eigen/Dense>
+
+#define ANALYTICS false
+#define LINEAR true
+
+namespace Bem {
+
+class LinLinSim : public Simulation {
+public:
+
+    LinLinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*waveform)(vec3 x,real t) = &default_waveform)
+        :Simulation(initial,p_inf,epsilon,sigma,gamma,waveform),
+        damping_factor(0.0),
+        min_elm_size(0.0) {
+            phi = Eigen::VectorXd::Zero(phi_dim());
+            psi = Eigen::VectorXd::Zero(psi_dim());
+
+            curvature_params = curvature_param();
+            
+#ifdef VERBOSE
+            std::cout << "This simulation has linear elements for phi and psi." << std::endl;
+#endif
+        }
+
+    virtual ~LinLinSim() {}
+
+    virtual size_t phi_dim() const override {
+        return mesh.verts.size();
+    }
+    virtual size_t psi_dim() const override {
+        return mesh.verts.size();
+    }
+
+    //virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
+    virtual void evolve_system(real dp, bool fixdt = false) override;
+    void evolve_system_RK4(real dp, bool fixdt = false);
+
+    void remesh(real L);
+
+    void set_damping_factor(real value) {
+        damping_factor = value;
+    }
+
+    void set_minimum_element_size(real value) {
+        min_elm_size = value;
+    }
+
+    //SimData gradient(SimData const& X) const;
+
+
+    std::vector<real> kappa(Mesh const& m) const;
+
+    CoordVec position_t(Mesh const& m,PotVec const& pot) const;
+    PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
+    PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
+
+protected:
+    std::vector<vec3> generate_gradients(std::vector<real>& kappa,Mesh const& m,Eigen::VectorXd const& phi,Eigen::VectorXd const& psi) const;
+    std::vector<vec3> generate_gradients(std::vector<real>& kappa) const;
+
+    std::vector<vec3> generate_tangent_gradients(Mesh const& m, std::vector<real> const& pot) const;
+
+    std::vector<real> curvature_param() const;
+
+    real damping_factor;
+    real min_elm_size;
+    PotVec curvature_params;
+    
+};
+
+} // namespace Bem
+
+#endif // LINLINSIM_HPP

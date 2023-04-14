@@ -1,0 +1,2 @@
+/usr/bin/ar qc libintegration.a CMakeFiles/integration.dir/Integrator.cpp.o CMakeFiles/integration.dir/ResultTypes.cpp.o
+/usr/bin/ranlib libintegration.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsimulation.a CMakeFiles/simulation.dir/Simulation.cpp.o CMakeFiles/simulation.dir/ColocSim.cpp.o CMakeFiles/simulation.dir/GalerkinSim.cpp.o CMakeFiles/simulation.dir/LinLinSim.cpp.o CMakeFiles/simulation.dir/SimData.cpp.o CMakeFiles/simulation.dir/MeshGroup.cpp.o CMakeFiles/simulation.dir/ConConSim.cpp.o CMakeFiles/simulation.dir/ConLinSim.cpp.o
+/usr/bin/ranlib libsimulation.a
