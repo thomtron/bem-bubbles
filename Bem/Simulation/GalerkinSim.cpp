@@ -1,6 +1,5 @@
 #include "GalerkinSim.hpp"
 #include "../Integration/Integrator.hpp"
-#include "../Integration/ResultTypes.hpp"
 #include <vector>
 #include <omp.h>
 
@@ -16,6 +15,7 @@ using namespace chrono;
 
 namespace Bem {
 
+// assemble_matrices computes the matrix elements of the system matrices G and H for the given Mesh m.
 void GalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const {
 #ifdef VERBOSE
     auto start = high_resolution_clock::now();
@@ -23,14 +23,6 @@ void GalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 
     G = Eigen::MatrixXd::Zero(m.verts.size(),m.verts.size());
     H = Eigen::MatrixXd::Zero(m.verts.size(),m.verts.size());
-
-    /* // used for completely deterministic runs!
-    vector<Eigen::MatrixXd> G_mats(4),H_mats(4);
-    for(auto& mat : G_mats)
-        mat = G;
-    for(auto& mat : H_mats)
-        mat = H;
-    */
 
     omp_set_num_threads(num_threads);
 
@@ -59,11 +51,7 @@ void GalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
         const Triplet trip(local.trigs[j]);
         
         for(size_t i(0);i<M;++i) {
-#if LINEAR
             int_local.integrate_LinLin_local(x,local.trigs[i],trip,G_loc,H_loc);
-#else
-            cerr << "Cubic interpolation for Galerkin method not supported yet!" << endl;
-#endif
         }
 
 #ifdef VERBOSE
@@ -73,27 +61,13 @@ void GalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
         #pragma omp critical 
         {
         for(size_t k(0);k<3;++k) {
-            G.col(trip[k]) += G_loc.col(k); //_mats[omp_get_thread_num()]
+            G.col(trip[k]) += G_loc.col(k);
             H.col(trip[k]) += H_loc.col(k);
         }
         }
-
-        
-        
+   
     }
-
     }
-
-/*
-    for(auto& mat : G_mats)
-        G += mat;
-    for(auto& mat : H_mats)
-        H += mat;
-*/
-
-    
-
-    
 
 #ifdef VERBOSE
     cout << endl;

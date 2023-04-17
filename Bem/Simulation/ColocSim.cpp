@@ -1,6 +1,5 @@
 #include "ColocSim.hpp"
 #include "../Integration/Integrator.hpp"
-#include "../Integration/ResultTypes.hpp"
 #include <vector>
 #include <omp.h>
 
@@ -16,6 +15,9 @@ using namespace chrono;
 
 namespace Bem {
 
+// assemble_matrices computes the matrix elements of the system matrices G and H for the given 
+// Mesh m. We discern two times two cases: linear interpolation or cubic interpolation (LINEAR) and
+// Mirrored mesh or not (for the "image charges" technique) (MIRROR_MESH)
 void ColocSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const {
 #ifdef VERBOSE
     auto start = high_resolution_clock::now();
@@ -24,22 +26,14 @@ void ColocSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh con
     G = Eigen::MatrixXd::Zero(m.verts.size(),m.verts.size());
     H = Eigen::MatrixXd::Zero(m.verts.size(),m.verts.size());
 
-    /* // used for completely deterministic runs!
-    vector<Eigen::MatrixXd> G_mats(4),H_mats(4);
-    for(auto& mat : G_mats)
-        mat = G;
-    for(auto& mat : H_mats)
-        mat = H;
-    */
-
     omp_set_num_threads(num_threads);
 
     #pragma omp parallel
     {
     
     Mesh local(m);
-    const vector<vec3>& x(local.verts);
-    const vector<vec3> n(generate_vertex_normals(local));
+    const CoordVec& x(local.verts);
+    const CoordVec n(generate_vertex_normals(local));
     size_t N(local.verts.size());
     size_t M(local.trigs.size());
     Integrator int_local(inter);
@@ -78,60 +72,34 @@ void ColocSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh con
         #pragma omp critical 
         {
         for(size_t k(0);k<3;++k) {
-            G.col(trip[k]) += G_loc.col(k); //_mats[omp_get_thread_num()]
+            G.col(trip[k]) += G_loc.col(k);
             H.col(trip[k]) += H_loc.col(k);
         }
-
-        //cout << G << endl << endl << endl;
-        }
-
-        
-        
+        }   
+    }
     }
 
-    }
-
-/*
-    for(auto& mat : G_mats)
-        G += mat;
-    for(auto& mat : H_mats)
-        H += mat;
-*/
-
-    // fill the solid angle part of the matrix for cubic interpolation
+    // The following part fills the solid angle depending part of the matrix.
+    // We use here the summation of the H-matrix elements. alternatively, the solid angle
+    // can be evaluated with solid_angle_at_vertex(Mesh,size_t) to prevent the summation
     for(size_t i(0);i<m.verts.size();++i) {
 #if LINEAR
-        // fill the solid angle part of the matrix
             
-        // 4-pi-rule
+        // '4-pi-rule'
         real val_H(0.0);
-        //real val_G(0.0);
+        
         for(size_t j(0);j<m.verts.size();++j) {
             val_H -= H(i,j);
-            //val_G += G(i,j);
         }
-        //cout << val_H << " - " << m.solid_angle_at_vertex(i) << " = " << val_H - m.solid_angle_at_vertex(i) << endl;
-        //cout << val_G << " - " << 4.0*M_PI << " = " << val_G - 4.0*M_PI << endl;
+        //alternative: val_H = solid_angle_at_vertex(m,i);
 
         H(i,i) -= (4.0*M_PI - val_H); 
-        // note: removed '= -' because for mirror case,
-        // H(i,i) already is non zero !
 
 #else
-        /*
-        real G_row = 0.0;
-        real H_row = 0.0;
-        for(size_t j(0);j<m.verts.size();++j) {
-            G_row += G(i,j);
-            H_row += H(i,j);
-        }
-        cout << G_row << "  " << H_row << "  " << 4*M_PI << "  " << 2*M_PI << endl;
-        */
+        // if cubic bezier triangle interpolation is used, the solid angle always is 1/2 at the vertices
         H(i,i) -= 2.0*M_PI;
 #endif
     }
-
-    
 
 #ifdef VERBOSE
     cout << endl;
@@ -139,10 +107,5 @@ void ColocSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh con
     cout << "used time = " << duration_cast<duration<double>>(end-start).count() << " s. " << endl;
 #endif
 }
-
-
-
-
-
 
 } // namespace Bem

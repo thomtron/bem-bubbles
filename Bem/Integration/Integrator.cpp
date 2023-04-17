@@ -15,8 +15,8 @@ void Integrator::integrate_identical_coloc<LinElm>(Interpolator tri_y,LinElm& re
     // An according reordering of indices happens outside this function.
     // the precision of quad_1d should be chosen higher here than for the galerkin integration
 
-    // M_PI_4 is the jacobian of transformation from (0,1) to (0,pi/4)
-    real jac_factor(0.5*tri_y.jacobian()*M_PI_4);
+    // M_PI_4 is the variable change factor of transformation from (0,1) to (0,pi/4)
+    real jac_factor(0.5*tri_y.area()*M_PI_4);
 
     LinElm temp;
 
@@ -46,8 +46,8 @@ void Integrator::integrate_identical_coloc_mir(Interpolator tri_y,HomoPair<LinEl
     // An according reordering of indices happens outside this function.
     // the precision of quad_1d should be chosen higher here than for the galerkin integration
 
-    // M_PI_4 is the jacobian of transformation from (0,1) to (0,pi/4)
-    real jac_factor(0.5*tri_y.jacobian()*M_PI_4);
+    // M_PI_4 is the variable change factor of transformation from (0,1) to (0,pi/4)
+    real jac_factor(0.5*tri_y.area()*M_PI_4);
 
     LinElm temp;
 

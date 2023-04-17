@@ -1,6 +1,5 @@
 #include "ConLinGalerkinSim.hpp"
 #include "../Integration/Integrator.hpp"
-#include "../Integration/ResultTypes.hpp"
 #include "../basic/Bem.hpp"
 #include <vector>
 #ifdef VERBOSE
@@ -59,21 +58,23 @@ void ConLinGalerkinSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H,
         for(size_t k(0);k<3;++k) {
             H.col(trip[k]) += H_loc.col(k);
         }
-
         }
-
-        
-        
+  
+    }
     }
 
-    }
-
+#ifdef VERBOSE
+    cout << endl;
+    auto end = high_resolution_clock::now();
+    cout << "used time = " << duration_cast<duration<double>>(end-start).count() << " s. " << endl;
+#endif
 
     return;
 }
 
 CoordVec ConLinGalerkinSim::position_t(Mesh const& m,PotVec const& pot) const {
 
+    // setting up the system of equations and solving it.
     Eigen::MatrixXd G,H;
     assemble_matrices(G,H,m);
     Eigen::VectorXd psi_l = solve_system(G,H*make_copy(pot));
@@ -83,6 +84,7 @@ CoordVec ConLinGalerkinSim::position_t(Mesh const& m,PotVec const& pot) const {
     vector<vec3> tangent_gradients = generate_tangent_gradients(m,pot);
     vector<vec3> vertex_gradients;
 
+    // adding the tangent derivatives of phi to the normal derivatives as in LinLinSim.cpp
     for(size_t i(0);i<m.verts.size();++i) {
         real num(0.0);
         vec3 grad;
@@ -100,8 +102,9 @@ CoordVec ConLinGalerkinSim::position_t(Mesh const& m,PotVec const& pot) const {
 
 }
 
-vector<vec3> ConLinGalerkinSim::generate_tangent_gradients(Mesh const& m, vector<real> const& pot) const {
-    vector<vec3> gradients;
+// same function as in LinLinSim.cpp
+CoordVec ConLinGalerkinSim::generate_tangent_gradients(Mesh const& m, PotVec const& pot) const {
+    CoordVec gradients;
     for(Triplet trig : m.trigs) {
         // this formula for the gradient of linear functions on 
         // an unstructured grid is taken from: Dombre_2019, page 8.

@@ -8,31 +8,12 @@
 #include "../basic/Bem.hpp"
 #include "../Mesh/Mesh.hpp"
 #include "../Integration/Integrator.hpp"
-#include "SimData.hpp"
 
 #include <Eigen/Dense>
 
 #include <cassert>
 
 namespace Bem {
-
-template<typename func_t,typename array_t>
-array_t RK4(func_t f, array_t const& x,real t,real dt) {
-    array_t k1 = f(x,t);
-    array_t k2 = f(x + 0.5*dt*k1,t + 0.5*dt);
-    array_t k3 = f(x + 0.5*dt*k2,t + 0.5*dt);
-    array_t k4 = f(x +     dt*k3,t +     dt);
-    return x + dt/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
-}
-
-template<typename func_t,typename array_t>
-array_t RK4(func_t f, array_t const& x, real dt) {
-    array_t k1 = f(x);
-    array_t k2 = f(x + 0.5*dt*k1);
-    array_t k3 = f(x + 0.5*dt*k2);
-    array_t k4 = f(x +     dt*k3);
-    return x + dt/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
-}
 
 // two typedefs that are useful for representing scalar functions 
 // and vector fields on the bubble surface

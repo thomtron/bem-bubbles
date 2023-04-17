@@ -38,7 +38,7 @@ public:
     CoordVec position_t(Mesh const& m,PotVec const& pot) const;
 
 private:
-    std::vector<vec3> generate_tangent_gradients(Mesh const& m, std::vector<real> const& pot) const;
+    CoordVec generate_tangent_gradients(Mesh const& m, PotVec const& pot) const;
 };
 
 } // namespace Bem

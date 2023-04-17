@@ -5,19 +5,23 @@
 
 namespace Bem {
 
+// The Interpolator provides functions that return the position of any point of a
+// given triangle. It must be initialized with three vectors designating the vertices
+// of the triangle in right-handed order.
+
 class Interpolator {
 public:
 
     Interpolator(vec3 a,vec3 b,vec3 c)
         :a(a),ab(b-a),bc(c-b) {
-            // corresponds to right-handed normal w.r.t. order of given vertices.
+            // corresponds to right-handed normal w.r.t. the order of the given vertices.
             normal_ = ab.vec(bc); 
-            jacobian_ = normal_.norm();
-            normal_*= (1.0/jacobian_);
+            area_ = normal_.norm();
+            normal_*= (1.0/area_);
         }
 
-    real inline jacobian() const {
-        return jacobian_;
+    real inline area() const {
+        return area_;
     }
 
     vec3 inline normal() const {
@@ -34,7 +38,7 @@ public:
 
 private:
     vec3 a,ab,bc,normal_;
-    real jacobian_;
+    real area_;
     
 };
 

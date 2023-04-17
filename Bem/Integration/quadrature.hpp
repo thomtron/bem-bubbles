@@ -7,6 +7,12 @@
 
 namespace Bem {
 
+// in this file we define the two simple structs quadrature_1d and quadrature_2d which
+// hold the coordinate(s) and the weight of a single quadrature point. The quadratures
+// that the Integrator class uses for integration are then vectors of such single 
+// quadrature points. These vectors are also defined in this file for different precision
+// levels. Note that the quadrature rules for triangles assume the unit triangle with 
+// vertex coordinates (0,0), (1,0) and (0,1).
 
 struct quadrature_1d {
     real x, weight;
@@ -49,21 +55,6 @@ const std::vector<quadrature_1d> gauss_12 = {
 };
 
 
-
-const std::vector<quadrature_1d> quadrature_x = {
-    quadrature_1d(0.0,0.0909090909091),
-    quadrature_1d(0.1,0.0909090909091),
-    quadrature_1d(0.2,0.0909090909091),
-    quadrature_1d(0.3,0.0909090909091),
-    quadrature_1d(0.4,0.0909090909091),
-    quadrature_1d(0.5,0.0909090909091),
-    quadrature_1d(0.6,0.0909090909091),
-    quadrature_1d(0.7,0.0909090909091),
-    quadrature_1d(0.8,0.0909090909091),
-    quadrature_1d(0.9,0.0909090909091),
-    quadrature_1d(1.0,0.0909090909091)
-};
-
 struct quadrature_2d {
     real x;
     real y;
@@ -73,7 +64,7 @@ struct quadrature_2d {
 };
 
 // from: https://people.sc.fsu.edu/~jburkardt/datasets/quadrature_rules_tri/quadrature_rules_tri.html
-// note: have to divide weights with 2
+// note: have to divide weights by 2
 
 using QuadratureList_2d = std::vector<quadrature_2d>;
 
@@ -154,7 +145,8 @@ const QuadratureList_2d quadrature_19 = { // prec. 9
     quadrature_2d(0.22196298916076573   ,  3.68384120547362581e-2, 4.32835393772893970e-2*0.5)
 };
 
-
+// list containing the pointers to the above quadrature for easy switching
+// if some level of detail adaptions want to be implemented.
 const std::vector<QuadratureList_2d const *> triangle_quadratures = {
     &quadrature_1,  // 0
     &quadrature_3,  // 1
@@ -164,42 +156,6 @@ const std::vector<QuadratureList_2d const *> triangle_quadratures = {
     &quadrature_13, // 5
     &quadrature_19  // 6
 };
-
-
-
-/*
-const QuadratureList_2d quadrature_7 = { // prec. 4
-    quadrature_2d(0.10128650732345625962,  0.10128650732345649554 , 0.062969590272413583643),
-    quadrature_2d(0.7974269853530872032,   0.10128650732345624574 , 0.062969590272413583643),
-    quadrature_2d(0.10128650732345650942,  0.79742698535308742525 , 0.062969590272413583643),
-    quadrature_2d(0.47014206410511505396,  0.059715871789769885136, 0.066197076394253095977),
-    quadrature_2d(0.47014206410511505396,  0.47014206410511510947 , 0.066197076394253095977),
-    quadrature_2d(0.059715871789769781053, 0.47014206410511527601 , 0.066197076394253095977),
-    quadrature_2d(0.33333333333333325932,  0.33333333333333342585 , 0.11250000000000001665 )
-};
-
-const QuadratureList_2d quadrature_19 = {
-    quadrature_2d(0.48968251919873762024,  0.020634961602524783814, 0.015667350113569539216),
-    quadrature_2d(0.48968251919873762024,  0.48968251919873773126 , 0.015667350113569539216),
-    quadrature_2d(0.020634961602524704016, 0.48968251919873784228 , 0.015667350113569539216),
-    quadrature_2d(0.33333333333333325932,  0.33333333333333342585 , 0.048567898141399425127),
-    quadrature_2d(0.18820353561903263584,  0.18820353561903288564 , 0.039823869463605138241),
-    quadrature_2d(0.62359292876193439525,  0.18820353561903271911 , 0.039823869463605138241),
-    quadrature_2d(0.1882035356190329134,   0.6235929287619346173  , 0.039823869463605138241),
-    quadrature_2d(0.22196298916076570573,  0.036838412054736313639, 0.021641769688644688086),
-    quadrature_2d(0.74119859878449800838,  0.22196298916076573349 , 0.021641769688644688086),
-    quadrature_2d(0.03683841205473636915,  0.74119859878449811941 , 0.021641769688644688086),
-    quadrature_2d(0.74119859878449800838,  0.036838412054736313639, 0.021641769688644688086),
-    quadrature_2d(0.221962989160765789,    0.74119859878449811941 , 0.021641769688644688086),
-    quadrature_2d(0.036838412054736133228, 0.22196298916076598329 , 0.021641769688644688086),
-    quadrature_2d(0.43708959149293657998,  0.12582081701412678454 , 0.038913770502387139139),
-    quadrature_2d(0.43708959149293657998,  0.437089591492936691   , 0.038913770502387139139),
-    quadrature_2d(0.12582081701412667352,  0.43708959149293680202 , 0.038913770502387139139),
-    quadrature_2d(0.044729513394452566355, 0.044729513394452878605, 0.012788837829349017361),
-    quadrature_2d(0.91054097321109450647,  0.04472951339445253166 , 0.012788837829349017361),
-    quadrature_2d(0.044729513394453024322, 0.91054097321109461749 , 0.012788837829349017361)
-};
-*/
 
 } // namespace Bem
 

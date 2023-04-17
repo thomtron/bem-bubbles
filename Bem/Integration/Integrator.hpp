@@ -286,7 +286,7 @@ void Integrator::integrate_disjoint(Interpolator tri_x,Interpolator tri_y, resul
         }
     }
 
-    result *= tri_x.jacobian()*tri_y.jacobian();
+    result *= tri_x.area()*tri_y.area();
 
     return;
 }
@@ -295,7 +295,7 @@ template<typename result_t>
 void Integrator::integrate_identical(Interpolator tri_x, result_t& result) const {
     result.G = 0.0;
     result.H = result_t::identical_H_factor;
-    result.H *= -tri_x.jacobian(); // negative factor here!
+    result.H *= -tri_x.area(); // negative factor here!
 
     using G_t = typename result_t::G_t;
 
@@ -308,7 +308,7 @@ void Integrator::integrate_identical(Interpolator tri_x, result_t& result) const
                                *eta1.weight
                                *eta2.weight
                                *eta3.weight
-                               // and jacobian of duffy coords:
+                               // and due to the variable change of duffy coords:
                                *xi.x*xi.x*xi.x 
                                *eta1.x*eta1.x
                                *eta2.x;
@@ -374,7 +374,7 @@ void Integrator::integrate_identical(Interpolator tri_x, result_t& result) const
         }
     }
 
-    result.G *= tri_x.jacobian()*tri_x.jacobian();
+    result.G *= tri_x.area()*tri_x.area();
 
     return;
 }
@@ -384,7 +384,7 @@ template<>
 void Integrator::integrate_identical_spec(Interpolator tri_x, HomoPair<LinElm>& result) const {
     result.G = 0.0;
     result.H = result_t::identical_H_factor;
-    result.H *= tri_x.jacobian();
+    result.H *= tri_x.area();
 
     using G_t = typename result_t::G_t;
 
@@ -397,7 +397,7 @@ void Integrator::integrate_identical_spec(Interpolator tri_x, HomoPair<LinElm>& 
                                *eta1.weight
                                *eta2.weight
                                *eta3.weight
-                               // and jacobian of duffy coords:
+                               // and area of duffy coords:
                                *xi.x*xi.x*xi.x 
                                *eta1.x*eta1.x
                                *eta2.x;
@@ -463,7 +463,7 @@ void Integrator::integrate_identical_spec(Interpolator tri_x, HomoPair<LinElm>& 
         }
     }
 
-    result.G *= tri_x.jacobian()*tri_x.jacobian();
+    result.G *= tri_x.area()*tri_x.area();
 
     return;
 }
@@ -483,10 +483,10 @@ void Integrator::integrate_shared_edge(Interpolator tri_x,Interpolator tri_y, re
                                *eta1.weight
                                *eta2.weight
                                *eta3.weight
-                               // and jacobian of duffy coords:
+                               // and due to the variable change of duffy coords:
                                *xi.x*xi.x*xi.x
                                *eta1.x*eta1.x;
-                               // attention! below we add eta2.x to the jacobian for some of the terms
+                               // attention! below we add eta2.x to the factor for some of the terms
 
                     real A = xi.x;        // xi*...
                     real B = A*eta1.x;    // eta1
@@ -546,7 +546,7 @@ void Integrator::integrate_shared_edge(Interpolator tri_x,Interpolator tri_y, re
         }
     }
 
-    result *= tri_x.jacobian()*tri_y.jacobian();
+    result *= tri_x.area()*tri_y.area();
 
     return;
 }
@@ -565,7 +565,7 @@ void Integrator::integrate_shared_vertex(Interpolator tri_x,Interpolator tri_y, 
                                *eta1.weight
                                *eta2.weight
                                *eta3.weight
-                               // and jacobian of duffy coords:
+                               // and due to the variable change of duffy coords:
                                *xi.x*xi.x*xi.x
                                *eta2.x;
 
@@ -586,7 +586,7 @@ void Integrator::integrate_shared_vertex(Interpolator tri_x,Interpolator tri_y, 
         }
     }
 
-    result *= tri_x.jacobian()*tri_y.jacobian();
+    result *= tri_x.area()*tri_y.area();
 
     return;
 }
@@ -611,7 +611,7 @@ void Integrator::integrate_disjoint_coloc(vec3 x,Interpolator tri_y,result_t& re
     }
     
 
-    result *= tri_y.jacobian();
+    result *= tri_y.area();
 
     return;
 }
@@ -635,7 +635,7 @@ void Integrator::integrate_disjoint_coloc_mir(vec3 x,Interpolator tri_y,result_t
     }
     
 
-    result *= tri_y.jacobian();
+    result *= tri_y.area();
     
     return;
 }
@@ -712,7 +712,7 @@ void Integrator::integrate_function(Interpolator tri,func_type func,real& result
         result += temp;
     }
 
-    result *= tri.jacobian();
+    result *= tri.area();
 
     return;
 }
@@ -730,7 +730,7 @@ void Integrator::integrate_function(Interpolator tri, result_t (*func)(real x0,r
         result += temp;
     }
 
-    result *= tri.jacobian();
+    result *= tri.area();
 
     return;
 }
@@ -749,7 +749,7 @@ void Integrator::integrate_function(Interpolator tri, func_t func,element_t appr
         result += temp;
     }
 
-    result *= tri.jacobian();
+    result *= tri.area();
 
     return;
 }

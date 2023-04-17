@@ -1,4 +1,4 @@
-add_library(simulation STATIC Simulation.cpp ColocSim.cpp GalerkinSim.cpp LinLinSim.cpp SimData.cpp ConConGalerkinSim.cpp ConLinGalerkinSim.cpp)
+add_library(simulation STATIC Simulation.cpp ColocSim.cpp GalerkinSim.cpp LinLinSim.cpp ConConGalerkinSim.cpp ConLinGalerkinSim.cpp)
 
 target_include_directories(simulation PUBLIC ${PROJECT_SOURCE_DIR}/Bem/Simulation)
 #target_link_libraries(simulation PUBLIC integration)

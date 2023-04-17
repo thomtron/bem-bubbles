@@ -8,7 +8,6 @@
 
 #include <Eigen/Dense>
 
-#define ANALYTICS false
 #define LINEAR true
 
 namespace Bem {
@@ -38,8 +37,7 @@ public:
     virtual size_t psi_dim() const override {
         return mesh.verts.size();
     }
-
-    //virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
+    
     virtual void evolve_system(real dp, bool fixdt = false) override;
     void evolve_system_RK4(real dp, bool fixdt = false);
 
@@ -53,8 +51,6 @@ public:
         min_elm_size = value;
     }
 
-    //SimData gradient(SimData const& X) const;
-
 
     std::vector<real> kappa(Mesh const& m) const;
 
@@ -63,9 +59,6 @@ public:
     PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 
 protected:
-    std::vector<vec3> generate_gradients(std::vector<real>& kappa,Mesh const& m,Eigen::VectorXd const& phi,Eigen::VectorXd const& psi) const;
-    std::vector<vec3> generate_gradients(std::vector<real>& kappa) const;
-
     std::vector<vec3> generate_tangent_gradients(Mesh const& m, std::vector<real> const& pot) const;
 
     std::vector<real> curvature_param() const;

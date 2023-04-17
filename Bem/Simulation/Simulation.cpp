@@ -10,7 +10,7 @@
 #include <chrono>
 #endif
 
-#include <Eigen/IterativeLinearSolvers> // for cg solver
+#include <Eigen/IterativeLinearSolvers> // for conjugate gradient solver
 
 using namespace std;
 #ifdef VERBOSE
@@ -50,18 +50,15 @@ Eigen::VectorXd Simulation::solve_system(Eigen::MatrixXd const& G,Eigen::VectorX
         Eigen::BiCGSTAB<Eigen::MatrixXd> solver;
         solver.compute(G);
         x = solver.solve(H_phi);
-        //Eigen::VectorXd x = solver.solveWithGuess(H_phi,psi); // leads to instabilities in computation...
+        // It is possible to use a guess for solving the linear system with the BiCGSTAB method. The previous
+        // psi-vector may be a good guess, but it cannot naively used when applying remeshing - at least the 
+        // values of psi would have to be newly interpolated.
+        //Eigen::VectorXd x = solver.solveWithGuess(H_phi,psi); 
     } else {
         Eigen::PartialPivLU<Eigen::MatrixXd> solver;
         solver.compute(G);
         x = solver.solve(H_phi);
     }
-    
-/*
-    Eigen::ConjugateGradient<Eigen::MatrixXd,Eigen::Lower|Eigen::Upper> cg; 
-    cg.compute(G);
-    Eigen::VectorXd x = cg.solve(H_phi);
-    */
 
 #ifdef VERBOSE
     cout << " - done." << endl;

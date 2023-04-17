@@ -7,6 +7,14 @@
 
 namespace Bem {
 
+// The class ElementArray holds an array of values, which represent
+// the integrals of a function (the kernel function from the Integrator 
+// class in our case), multiplied by the different types of 
+// basis functions, over the unit triangle.
+// Below we define some typesdefs for an ElementArray of length 3 and 9, 
+// which correspond to linear/constant (3x1 basis functions) respectively 
+// linear/linear (3x3 basis functions) elements.
+
 // note for more complicated statements it would make sense to 
 // create lazy evaluation methods for ElementArray, but I think
 // this isn't so useful in our case.
@@ -40,6 +48,10 @@ public:
         std::array<real,N>::fill(value);
     }
 };
+
+// The class Pair enables to compose different types of Elements being
+// ElementArrays or simply reals. The two components of a pair correspond
+// to the two Matrices G and H we want to fill in the boundary element method.
 
 template<typename A, typename B>
 struct Pair {
@@ -78,10 +90,6 @@ using LinElm = ElementArray<3>;
 using LinLinElm = ElementArray<9>;
 using ConElm = real;
 
-inline LinLinElm get_linear_elements(real x0,real x1,real y0,real y1);
-inline LinElm get_linear_elements(real y0,real y1);
-// same for ConstantLinear 
-
 inline LinLinElm get_linear_elements(real x0,real x1,real y0,real y1) {
     real x0y0(x0*y0),x0y1(x0*y1),x1y0(x1*y0),x1y1(x1*y1);
 
@@ -108,6 +116,9 @@ inline LinElm get_linear_elements(real x0,real x1) {
     return functions;
 }
 
+// for the cubic interpolation we have a slightly different 
+// convention for the unit triangle and therefore a separate
+// function is needed.
 inline LinElm get_linear_elements_for_cubic(real x0,real x1) {
     LinElm functions;
     functions[0] = x0;            // a
