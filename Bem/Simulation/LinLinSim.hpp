@@ -12,6 +12,8 @@
 
 namespace Bem {
 
+PotVec compute_exterior_pot(CoordVec const& pos,Mesh M,PotVec phi,PotVec psi);
+
 class LinLinSim : public Simulation {
 public:
 
@@ -58,7 +60,11 @@ public:
     PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
     PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 
+
+    PotVec exterior_pot(CoordVec const& positions) const;
+
 protected:
+
     std::vector<vec3> generate_tangent_gradients(Mesh const& m, std::vector<real> const& pot) const;
 
     std::vector<real> curvature_param() const;

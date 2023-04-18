@@ -10,6 +10,9 @@ using namespace std;
 
 namespace Bem {
 
+// export_obj is a very simple export feature, where the triangles and verts are written
+// to a simple text file without any additional data.
+
 void export_obj (string filename, Mesh const& mesh)
 {
     ofstream output(filename);
@@ -29,13 +32,10 @@ void export_obj (string filename, Mesh const& mesh)
 }
 
 
-// these are two small structs needed for export_ply, since we want to export in binary form and 
-// export floats and ints always in 32 bits (eventually contrary to the representations used in computations)
-struct float_vec {
-    float x,y,z;
-    float_vec(float x,float y,float z)
-        :x(x),y(y),z(z) {}
-};
+// These are some small structs used for the export of small sets of numbers. We use
+// such structs in order to ensure that the written numbers are of the right format
+// and occupy exactly the right amount of space (without gaps etc.), since we'll export
+// the numbers in binary format for the ply exports.
 
 struct uint_vec {
     unsigned int i,j,k;
@@ -45,8 +45,15 @@ struct uint_vec {
 
 template<typename T>
 struct Vertex {
+    float x,y,z;
+    Vertex(float x,float y,float z)
+        :x(x),y(y),z(z) {}
+};
+
+template<typename T>
+struct Vertex4 {
     T x,y,z,w;
-    Vertex(T x,T y,T z,T w)
+    Vertex4(T x,T y,T z,T w)
         :x(x),y(y),z(z),w(w) {}
 };
 
@@ -79,8 +86,8 @@ void export_ply (string filename, Mesh const& mesh) {
     output.open(filename, std::ofstream::binary | std::ofstream::app);
 
     for(size_t i(0);i<n;++i) {
-        float_vec vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
-        output.write((char*) (&vec),sizeof(float_vec));
+        Vertex<float> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
+        output.write((char*) (&vec),sizeof(Vertex<float>));
     }
     for(Triplet const& t : mesh.trigs){
         uint_vec vec(t.a,t.b,t.c);
@@ -117,8 +124,8 @@ void export_ply (string filename, Mesh const& mesh, vector<real> const& values, 
     output.open(filename, std::ofstream::binary | std::ofstream::app);
 
     for(size_t i(0);i<n;++i) {
-        float_vec vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
-        output.write((char*) (&vec),sizeof(float_vec));
+        Vertex<float> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
+        output.write((char*) (&vec),sizeof(Vertex<float>));
         char red(clamp((values[i]-min)/(max-min)*255,0.,255.));
         char green(0);
         char blue(clamp((max-values[i])/(max-min)*255,0.,255.));
@@ -161,8 +168,8 @@ void export_ply_colors (string filename, Mesh const& mesh, vector<vec3> const& c
     output.open(filename, std::ofstream::binary | std::ofstream::app);
 
     for(size_t i(0);i<n;++i) {
-        float_vec vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
-        output.write((char*) (&vec),sizeof(float_vec));
+        Vertex<float> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z);
+        output.write((char*) (&vec),sizeof(Vertex<float>));
         char red    = clamp(colors[i].x*255.,0.,255.);
         char green  = clamp(colors[i].y*255.,0.,255.);
         char blue   = clamp(colors[i].z*255.,0.,255.);
@@ -204,8 +211,8 @@ void export_ply_float (string filename, Mesh const& mesh, vector<real> const& va
     output.open(filename, std::ofstream::binary | std::ofstream::app);
 
     for(size_t i(0);i<n;++i) {
-        Vertex<float> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z,values[i]);
-        output.write((char*) (&vec),sizeof(Vertex<float>));
+        Vertex4<float> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z,values[i]);
+        output.write((char*) (&vec),sizeof(Vertex4<float>));
     }
     for(Triplet const& t : mesh.trigs){
         uint_vec vec(t.a,t.b,t.c);
@@ -240,8 +247,8 @@ void export_ply_double (string filename, Mesh const& mesh, vector<real> const& v
     output.open(filename, std::ofstream::binary | std::ofstream::app);
 
     for(size_t i(0);i<n;++i) {
-        Vertex<double> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z,values[i]);
-        output.write((char*) (&vec),sizeof(Vertex<double>));
+        Vertex4<double> vec(mesh.verts[i].x,mesh.verts[i].y,mesh.verts[i].z,values[i]);
+        output.write((char*) (&vec),sizeof(Vertex4<double>));
     }
     for(Triplet const& t : mesh.trigs){
         uint_vec vec(t.a,t.b,t.c);
@@ -351,8 +358,8 @@ void export_ply_float_separat (string filename, Mesh const& mesh, vector<real> c
     for(size_t i(0);i<m;++i) {
         for(size_t j(0);j<3;++j){
             size_t k = mesh.trigs[i][j];
-            Vertex<float> vec(mesh.verts[k].x,mesh.verts[k].y,mesh.verts[k].z,values[3*i+j]);
-            output.write((char*) (&vec),sizeof(Vertex<float>));
+            Vertex4<float> vec(mesh.verts[k].x,mesh.verts[k].y,mesh.verts[k].z,values[3*i+j]);
+            output.write((char*) (&vec),sizeof(Vertex4<float>));
         }
     }
     for(size_t i(0);i<m;++i){
@@ -389,8 +396,8 @@ void export_ply_double_separat (string filename, Mesh const& mesh, vector<real> 
     for(size_t i(0);i<m;++i) {
         for(size_t j(0);j<3;++j){
             size_t k = mesh.trigs[i][j];
-            Vertex<double> vec(mesh.verts[k].x,mesh.verts[k].y,mesh.verts[k].z,values[3*i+j]);
-            output.write((char*) (&vec),sizeof(Vertex<double>));
+            Vertex4<double> vec(mesh.verts[k].x,mesh.verts[k].y,mesh.verts[k].z,values[3*i+j]);
+            output.write((char*) (&vec),sizeof(Vertex4<double>));
         }
     }
     for(size_t i(0);i<m;++i){
@@ -403,7 +410,7 @@ void export_ply_double_separat (string filename, Mesh const& mesh, vector<real> 
     output.close();
 }
 
-
+// The following structs are used to read chunks of binary data.
 
 struct float_5 {
     float x,y,z,v,w;
@@ -437,6 +444,8 @@ struct int_3 {
     int i,j,k;
 };
 
+// different properties that could be read and their size in bytes
+
 enum Property {
     FLOAT,
     DOUBLE,
@@ -461,10 +470,11 @@ array<size_t,7> propSize {
 vector<Property> read_properties(ifstream& input) {
     vector<Property> result;
 
+    // parsing the header to see what kind of values we can import
+
     string line;
     size_t pos(input.tellg());
     while(getline(input,line)) {
-        //cout << "test" << endl;
         stringstream sstream(line);
         string word;
         sstream >> word;
@@ -476,22 +486,18 @@ vector<Property> read_properties(ifstream& input) {
 
         else if(word == "property") {
             string type;
-            //cout << "property   ";
             sstream >> type;
 
             if(type == "float" or type == "float32") {
                 result.push_back(FLOAT);
-                //cout << "float" << endl;
             }
 
             else if(type == "double" or type == "float64") {
                 result.push_back(DOUBLE);
-                //cout << "double" << endl;
             }
 
             else if(type == "uchar" or type == "uint8" or type == "char") {
                 result.push_back(CHAR);
-                //cout << "char" << endl;
             }
 
             else if(type == "list") {
@@ -500,11 +506,9 @@ vector<Property> read_properties(ifstream& input) {
                     sstream >> type;
                     if(type == "uint" or type == "uint32") {
                         result.push_back(LIST_CHAR_UINT);
-                        //cout << "list char uint" << endl;
                     }
                     else if(type == "int" or type == "int32") {
                         result.push_back(LIST_CHAR_INT);
-                        //cout << "list char int" << endl;
                     }
                 } else {
                     cerr << "unsupported type for polygon size: '" << type << "' instead of 'uchar' or 'uint8" << endl;
@@ -548,7 +552,6 @@ void import_ply (std::string filename, Mesh& mesh, std::vector<real>& values) {
     while(reading and getline(input,line)) {
         if(line.find("end_header") != string::npos) { // meaning if end_header is found
             reading = false;
-            //cout << "finished reading header." << endl;
         } else {
             string word;
             stringstream sstream(line);
@@ -558,13 +561,11 @@ void import_ply (std::string filename, Mesh& mesh, std::vector<real>& values) {
                 sstream >> word;
                 
                 if(word == "vertex"){
-                    //cout << "vertex   " << endl;
                     sstream >> num_vertex;
                     vertexprops = read_properties(input);
                 }
 
                 else if(word == "face"){
-                    //cout << "face   " << endl;
                     sstream >> num_faces;
                     faceprops = read_properties(input);
                 }

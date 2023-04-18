@@ -25,8 +25,6 @@ template<typename result_t> inline result_t integrand_coloc(vec3 x,real y0,real 
 template<typename result_t> inline result_t integrand_coloc_mir(vec3 x,real y0,real y1,Interpolator interp_y);
 template<typename result_t> inline result_t integrand_coloc(vec3 x,real y0,real y1,Cubic const& interp_y);
 
-//template<typename result_t,typename func_type> inline result_t integrand(func_type func,real x0,real x1,Interpolator interp);
-
 class Integrator {
 public:
 
@@ -34,10 +32,13 @@ public:
         :quad_2d(quadrature_3)
         ,quad_1d(gauss_3) {}
 
-
+    // the functions for integrating the kernel function together with the basis functions over the triangle(s)
+    // indicated by tri_i (and tri_j). x is a vector containing the positions of the vertices, G and H are the 
+    // system matrices to whose components the integral values are added. for the cubic versions, another vector
+    // of 3d vectors is needed, which gives the vertex normals. The functions with the keyword local expect smaller
+    // matrices with only three columns. They are used for parallel computation (see in Simulation classes).
     void integrate_LinLin               (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_LinLin_local         (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
-    void integrate_disLinLin            (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,size_t i,size_t j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_ConLin               (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,size_t i,size_t j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_ConLin_local         (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,size_t i,size_t j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_Con                  (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,real& G,real& H) const;
@@ -46,7 +47,6 @@ public:
     void integrate_Lin_coloc_local_cubic(std::vector<vec3> const& x,std::vector<vec3> const& n,size_t i,Triplet tri_j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_Lin_coloc_local      (std::vector<vec3> const& x,size_t i,Triplet tri_j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     void integrate_Lin_coloc_local_mir  (std::vector<vec3> const& x,size_t i,Triplet tri_j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
-    void integrate_Lin_discoloc         (std::vector<vec3> const& x,Triplet tri_i,Triplet tri_j,size_t i,size_t j,Eigen::MatrixXd& G,Eigen::MatrixXd& H) const;
     
     real get_exterior_potential(std::vector<vec3> const& x, Triplet tri_j, std::vector<real> phi, std::vector<real> psi, vec3 y) const;
 
@@ -69,7 +69,7 @@ public:
         quad_1d = quad;
     }
 
-//private:
+private:
 
     template<typename result_t>
     void integrate_disjoint     (Interpolator tri_x,Interpolator tri_y, result_t& result) const;
@@ -79,8 +79,6 @@ public:
     void integrate_shared_edge  (Interpolator tri_x,Interpolator tri_y, result_t& result) const;
     template<typename result_t>
     void integrate_identical    (Interpolator tri_x, result_t& result) const;
-    //template<typename result_t>
-    //void integrate_identical_spec (Interpolator tri_x, result_t& result) const;
 
 
     template<typename result_t>
@@ -116,15 +114,11 @@ public:
 
 // basic functions
 inline HomoPair<real> integrand(vec3 z,vec3 n) {
-    //real inv_dist = z.norm2(); // test A -> res: 4/3 resp. 1/3
-    //real inv_dist = sin(z.x)*sin(z.y); // test B -> res: 0 resp. 0
     real inv_dist = 1.0/z.norm();
     return HomoPair<real>(inv_dist,-z.dot(n)*inv_dist*inv_dist*inv_dist);
 }
 
 inline real integrand_identical(vec3 z) {
-    //return z.norm2(); // test A -> res: 4/3 resp. 1/3
-    //return sin(z.x)*sin(z.y); // test B -> res: 0 resp. 0
     return 1.0/z.norm();
 }
 
@@ -216,7 +210,6 @@ inline HomoPair<LinElm> integrand_coloc<HomoPair<LinElm>>(vec3 x,real y0,real y1
 
 template<>
 inline HomoPair<LinElm> integrand_coloc_mir<HomoPair<LinElm>>(vec3 x,real y0,real y1,Interpolator interp_y) {
-    // HomoPair<real> basic(integrand(interp_y.interpolate(y0,y1) - x,interp_y.normal()));
     vec3 y = interp_y.interpolate(y0,y1);
     vec3 n = interp_y.normal();
     HomoPair<real> basic(integrand(y - x,n));
@@ -236,34 +229,7 @@ inline HomoPair<LinElm> integrand_coloc_mir<HomoPair<LinElm>>(vec3 x,real y0,rea
 }
 
 
-/*
-template<>
-inline real integrand<real,real (*)(vec3)>(real (*func)(vec3),real x0,real x1,Interpolator interp) {
-    return func(interp.interpolate(x0,x1));
-}
-
-template<>
-inline real integrand<real,real (*)(vec3,vec3)>(real (*func)(vec3 x,vec3 n),real x0,real x1,Interpolator interp) {
-    return func(interp.interpolate(x0,x1),interp.normal());
-}
-
-template<>
-inline LinElm integrand<LinElm,real (*)(vec3)>(real (*func)(vec3),real x0,real x1,Interpolator interp) {
-    LinElm result(get_linear_elements(x0,x1));
-    result *= func(interp.interpolate(x0,x1));
-    return result;
-}
-
-template<>
-inline LinElm integrand<LinElm,real (*)(vec3 x,vec3 n)>(real (*func)(vec3 x,vec3 n),real x0,real x1,Interpolator interp) {
-    LinElm result(get_linear_elements(x0,x1));
-    result *= func(interp.interpolate(x0,x1),interp.normal());
-    return result;
-}
-*/
-
-// implementations of member templates:
-
+// definition of member templates
 
 // galerkin methods
 template<typename result_t>
@@ -378,96 +344,6 @@ void Integrator::integrate_identical(Interpolator tri_x, result_t& result) const
 
     return;
 }
-
-/*
-template<>
-void Integrator::integrate_identical_spec(Interpolator tri_x, HomoPair<LinElm>& result) const {
-    result.G = 0.0;
-    result.H = result_t::identical_H_factor;
-    result.H *= tri_x.area();
-
-    using G_t = typename result_t::G_t;
-
-    for(quadrature_1d xi : quad_1d) {
-        for(quadrature_1d eta1 : quad_1d) {
-            for(quadrature_1d eta2 : quad_1d) {
-                for(quadrature_1d eta3 : quad_1d) {
-
-                    real weight = xi.weight
-                               *eta1.weight
-                               *eta2.weight
-                               *eta3.weight
-                               // and area of duffy coords:
-                               *xi.x*xi.x*xi.x 
-                               *eta1.x*eta1.x
-                               *eta2.x;
-
-
-                    real A = xi.x;
-                    real B = A*eta1.x;
-                    real C = B*eta2.x;
-                    real D = C*eta3.x;
-
-                    // result.H is zero here: normal is orthogonal to y-x
-
-                    G_t temp_G(0.0);
-                    
-                    temp_G += integrand_identical<G_t>(  
-                                     A
-                                    ,A-B+C
-                                    ,A-D
-                                    ,A-B
-                                    ,tri_x);
-                               
-
-                    temp_G += integrand_identical<G_t>(  
-                                     A-D
-                                    ,A-B
-                                    ,A
-                                    ,A-B+C
-                                    ,tri_x);
-
-                    temp_G += integrand_identical<G_t>(  
-                                     A
-                                    ,B-C+D
-                                    ,A-C
-                                    ,B-C
-                                    ,tri_x);
-
-                    temp_G += integrand_identical<G_t>(  
-                                     A-C
-                                    ,B-C
-                                    ,A
-                                    ,B-C+D
-                                    ,tri_x);
-
-                    temp_G += integrand_identical<G_t>(  
-                                     A-D
-                                    ,B-D
-                                    ,A
-                                    ,B-C
-                                    ,tri_x);
-
-                    temp_G += integrand_identical<G_t>(  
-                                     A
-                                    ,B-C
-                                    ,A-D
-                                    ,B-D
-                                    ,tri_x);
-
-                    temp_G *= weight;
-
-                    result.G += temp_G;
-                }
-            }
-        }
-    }
-
-    result.G *= tri_x.area()*tri_x.area();
-
-    return;
-}
-*/
 
 template<typename result_t>
 void Integrator::integrate_shared_edge(Interpolator tri_x,Interpolator tri_y, result_t& result) const {
@@ -597,8 +473,6 @@ void Integrator::integrate_disjoint_coloc(vec3 x,Interpolator tri_y,result_t& re
     result.G = 0.0;
     result.H = 0.0;
 
-    //QuadratureList_2d quad = *triangle_quadratures[3];
-
     for(quadrature_2d q_y : quad_2d) {
         result_t temp(integrand_coloc<result_t>(
                             x,
@@ -620,8 +494,6 @@ template<typename result_t>
 void Integrator::integrate_disjoint_coloc_mir(vec3 x,Interpolator tri_y,result_t& result) const {
     result.G = 0.0;
     result.H = 0.0;
-
-    //QuadratureList_2d quad = *triangle_quadratures[3];
 
     for(quadrature_2d q_y : quad_2d) {
         result_t temp(integrand_coloc_mir<result_t>(
@@ -645,8 +517,6 @@ void Integrator::integrate_disjoint_coloc(vec3 x,Cubic const& tri_y,result_t& re
     result.G = 0.0;
     result.H = 0.0;
 
-    //QuadratureList_2d quad = *triangle_quadratures[3];
-
     for(quadrature_2d q_y : quad_2d) {
         result_t temp(integrand_coloc<result_t>(
                             x,
@@ -666,8 +536,6 @@ void Integrator::integrate_identical_coloc(Cubic const& tri_y,result_t& result) 
     result.G = 0.0;
     result.H = 0.0;
     vec3 x = tri_y.get_a();
-
-
 
     // I use here an easy version of duffy coords: e1 = u, e2 = u*v, u,v in (0,1) (gauss. quadr.)
     // The integration factor of this transform is u.
@@ -693,7 +561,6 @@ void Integrator::integrate_identical_coloc(Cubic const& tri_y,result_t& result) 
     }
     
 }
-
 
 
 // function integration
@@ -754,21 +621,6 @@ void Integrator::integrate_function(Interpolator tri, func_t func,element_t appr
     return;
 }
 
-/*
-template<typename func_type>
-void Integrator::get_linear_representation(func_type func,std::vector<vec3> const& x,Triplet tri,std::vector<real>& result) const {
-    Interpolator interp(x[tri.a],x[tri.b],x[tri.c]);
-    LinElm res;
-    integrate_function(interp,func,res);
-    result[tri.a] = res[0];
-    result[tri.b] = res[1];
-    result[tri.c] = res[2];
-    return;
-}
-*/
-
-
-
 
 template<typename result_t>
 void Integrator::integrate(std::vector<vec3> const& x,Triplet& tri_i,Triplet& tri_j,result_t& result) const {
@@ -790,7 +642,6 @@ void Integrator::integrate(std::vector<vec3> const& x,Triplet& tri_i,Triplet& tr
             Interpolator tri_y(x[tri_j.a],x[tri_j.b],x[tri_j.c]);
 
             integrate_disjoint(tri_x,tri_y,result);
-            //result.G = 0.0;
             break;
         }
         case 1: // shared vertex
@@ -812,7 +663,6 @@ void Integrator::integrate(std::vector<vec3> const& x,Triplet& tri_i,Triplet& tr
             Interpolator tri_y(x[tri_j.a],x[tri_j.b],x[tri_j.c]);
 
             integrate_shared_vertex(tri_x,tri_y,result);
-            //result.G = 0.0;
             break;
         }
         case 2: // shared edge
@@ -845,12 +695,8 @@ void Integrator::integrate(std::vector<vec3> const& x,Triplet& tri_i,Triplet& tr
             Interpolator tri_x(x[tri_i.a],x[tri_i.b],x[tri_i.c]);
             Interpolator tri_y(x[tri_j.a],x[tri_j.b],x[tri_j.c]);
 
-            //result_t testbit;
             integrate_shared_edge(tri_x,tri_y,result);
             result.H *= sign;
-            //testbit.G = result.G;
-            //integrate_shared_edge(tri_y,tri_x,result);
-            //result.G -= testbit.G;
             break;
         }
         case 3: // identical triangle
@@ -858,7 +704,6 @@ void Integrator::integrate(std::vector<vec3> const& x,Triplet& tri_i,Triplet& tr
             Interpolator tri_x(x[tri_i.a],x[tri_i.b],x[tri_i.c]);
 
             integrate_identical(tri_x,result);
-            //result.G = 0.0;
             break;
         }
         default:

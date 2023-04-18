@@ -9,6 +9,12 @@
 
 namespace Bem {
 
+// The class CoordSystem can represent a coordinate system with a 
+// specified origin and three coordinate axis. It is used to transform 
+// vectors between the world coordinate system and this coordinate system.
+// Alternatively one could use 4d-matrices as commonly used in computer
+// graphics.
+
 class CoordSystem {
 public:
 
@@ -50,7 +56,11 @@ private:
     vec3 O,X,Y,Z;
 };
 
-
+// The FittingTool is a class that can represent a polynomial fit over a set of points in 
+// 3D-space. It has methods for computing a fit of a set of second degree polynomials and 
+// methods for retrieving the normal and mean curvature at its origin. We mainly use this
+// class for smoothly projecting a higher density mesh on a lower density mesh. The applied
+// methods are described in Wang_2014
 
 class FittingTool {
 public:
@@ -58,7 +68,6 @@ public:
     using vec3 = Bem::vec3;
 
     // fills the vector "fitting_params"
-    void compute_quadratic_fit(vec3 normal, vec3 center_vertex, std::vector<vec3> vertices,real d);
     void compute_quadratic_fit(vec3 normal, vec3 center_vertex, std::vector<vec3> vertices);
     vec3 get_position(real x, real y) const;
     real get_curvature() const;

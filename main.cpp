@@ -6,6 +6,9 @@
 #include "Bem/Mesh/MeshManip.hpp"
 #include "Bem/Mesh/FittingTool.hpp"
 #include "Bem/Simulation/ColocSim.hpp"
+#include "Bem/Simulation/GalerkinSim.hpp"
+#include "Bem/Simulation/ConConGalerkinSim.hpp"
+#include "Bem/Simulation/ConLinGalerkinSim.hpp"
 
 #include <cmath>
  
@@ -42,6 +45,16 @@ int main() {
     Bem::real gamma = 1.667; //3.0/2.0;
     ColocSim sim(M,1.0,epsilon,sigma,gamma);
     sim.set_phi(0.0);
+
+
+    ConConGalerkinSim concon(M,1.0,epsilon,sigma,gamma);
+    ConLinGalerkinSim conlin(M,1.0,epsilon,sigma,gamma);
+    GalerkinSim galerkin(M,1.0,epsilon,sigma,gamma);
+
+    concon.evolve_system(0.1);
+    conlin.evolve_system(0.1);
+    galerkin.evolve_system(0.1);
+
     //sim.set_dp_balance(6.0);
     Bem::real V_0(sim.get_volume());
 

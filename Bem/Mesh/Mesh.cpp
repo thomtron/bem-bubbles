@@ -22,9 +22,8 @@ void Mesh::add(Mesh other,vec3 const& position) {
     }
 }
 void Mesh::scale(real s) {
-    for(vec3& elm : verts) {
+    for(vec3& elm : verts)
         elm *= s;
-    }
 }
 
 // not most efficient way, but we don't have to introduce matrices like that
@@ -44,6 +43,11 @@ void Mesh::rotate(vec3 v) {
             pos = pos_para + a*(pos_orth*cos(theta)+w*sin(theta));
         }
     }
+}
+
+void Mesh::translate(vec3 v) {
+    for(vec3& elm : verts)
+        elm += v;
 }
 
 void Mesh::clear() {
@@ -109,7 +113,6 @@ vector<vector<size_t>> generate_neighbours(Mesh const& mesh) {
 vector<vec3> generate_triangle_normals  (Mesh const& mesh) {
     vector<vec3> triangle_normals;
     for(Triplet const& tri : mesh.trigs){
-        // calculate here the outward facing normal
         vec3 normal((mesh.verts[tri.b]-mesh.verts[tri.a]).vec(mesh.verts[tri.c]-mesh.verts[tri.a]));
         normal.normalize();
         triangle_normals.push_back(normal);
@@ -117,7 +120,7 @@ vector<vec3> generate_triangle_normals  (Mesh const& mesh) {
     return triangle_normals;
 }
 
-// approximation of vertex normals as proposed by Max_1999. Is exact for vertices on a sphere
+// approximation of vertex normals as proposed by Max_1999 (see Rusinkiewicz_2004). Is exact for vertices on a sphere
 vector<vec3> generate_vertex_normals(Mesh const& mesh, vector<vector<size_t>> const& triangle_indices) {
     vector<vec3> vertex_normals;
 
@@ -142,7 +145,7 @@ vector<vec3> generate_vertex_normals(Mesh const& mesh) {
     return generate_vertex_normals(mesh,generate_triangle_indices(mesh));
 }
 
-
+// solid angle computation using spherical trigonometry (rule in the last line of this function, see Todhunter_1886)
 real solid_angle_at_vertex(Mesh const& mesh, vector<vector<size_t>> const& triangle_indices, vector<vec3> const& triangle_normals, size_t i) {
     vector<Triplet> trigs;
     for(size_t j : triangle_indices[i]){
@@ -154,7 +157,6 @@ real solid_angle_at_vertex(Mesh const& mesh, vector<vector<size_t>> const& trian
     vector<size_t> trig_indices;
     sorted_trigs.push_back(trigs[0]);
     trig_indices.push_back(triangle_indices[i][0]);
-    //cout << "size = " << trigs.size() << endl;
     size_t num(0);
     for(size_t j(1);j<trigs.size();++j){
         size_t new_ind = sorted_trigs[j-1].c;
@@ -228,6 +230,12 @@ void to_centerofmass(Mesh& mesh) {
 }
 
 
+
+// This function computes the curvature tensor on each triangle and then 
+// averages the values for mean and gaussian curvature on the mesh's vertices.
+// These values are stored in kappa (mean) and gamma (gaussian) curvature.
+// from these curvatures we can obtain the principal values of the curvature tensor.
+// The used methods are taken from the paper: Rusinkiewicz_2004.pdf
 void curvatures(Mesh const& mesh, vector<real>& kappa, vector<real>& gamma) {
     using Eigen::Matrix2d;
     using Eigen::Vector;
@@ -324,6 +332,10 @@ vector<real> max_curvature(Mesh const& mesh) {
     return max_curv;
 }
 
+
+
+// function for splitting/joining meshes
+
 Mesh join_meshes(vector<Mesh> const& list) {
     Mesh joined;
     for(Mesh const& m : list) {
@@ -347,6 +359,9 @@ vector<Mesh> split_by_loose_parts(Mesh const& mesh) {
     return split_by_loose_parts(mesh,vert_perm);
 }
 
+// split_by_loose_parts scans the mesh for parts that are not connected with each other.
+// In our case we want to split up the mesh describing a group of bubbles into a vector
+// of meshes describing each only one bubble.
 vector<Mesh> split_by_loose_parts(Mesh const& mesh, vector<vector<size_t>>& vert_perm) {
     vector<Mesh> result;
 

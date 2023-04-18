@@ -9,6 +9,8 @@
 
 namespace Bem {
 
+// the mesh class consists of a vector of vertices and a vector triangle indices.
+// additionaly there are some very basic class methods.
 
 struct Mesh {
     // position in 3d space of the vertices of the mesh
@@ -19,27 +21,42 @@ struct Mesh {
     void add(Mesh other,vec3 const& position = vec3());
     void scale(real s);
     void rotate(vec3 v);
+    void translate(vec3 v);
     void clear();
 };
 
+// generate_triangle_indices returns for each vertex a vector of indices 
+// of the triangles touching this vertex. The outer vector's length is thus
+// the same as mesh.verts.size()
 std::vector<std::vector<size_t>> generate_triangle_indices(Mesh const& mesh);
+// generate_neighbours returns for each vertex a list of its direct neighbours (connected with an edge)
+std::vector<std::vector<size_t>> generate_neighbours(Mesh const& mesh);
+// generate_2_ring returns for each vertex a list of the neighbours of its neighbours, including the vertex itself
 std::vector<std::vector<size_t>> generate_2_ring(Mesh const& mesh);
 std::vector<std::vector<size_t>> generate_2_ring(Mesh const& mesh, std::vector<std::vector<size_t>> const& neighbours);
-std::vector<std::vector<size_t>> generate_neighbours(Mesh const& mesh);
 
 std::vector<vec3> generate_triangle_normals  (Mesh const& mesh); // with vector product
+// vertex normals according to Max_1999
 std::vector<vec3> generate_vertex_normals    (Mesh const& mesh, std::vector<std::vector<size_t>> const& triangle_indices);
 std::vector<vec3> generate_vertex_normals    (Mesh const& mesh);
 
 // solid angle of mesh w.r.t. vertex i
 real solid_angle_at_vertex(Mesh const& mesh, std::vector<std::vector<size_t>> const& triangle_indices, std::vector<vec3>& triangle_normals, size_t i); 
 real solid_angle_at_vertex(Mesh const& mesh, size_t i);
-real volume(Mesh const& mesh); // computes total volume of the mesh
-vec3 centerofmass(Mesh const& mesh); // computes center of mass for constant mass density
-void to_centerofmass(Mesh& mesh);
 
-std::vector<real> max_curvature(Mesh const& mesh);
-void curvatures(Mesh const& mesh, std::vector<real>& kappa, std::vector<real>& gamma);
+real volume(Mesh const& mesh);          // computes total volume of the mesh
+
+vec3 centerofmass(Mesh const& mesh);    // computes center of mass for constant mass density
+void to_centerofmass(Mesh& mesh);       // translates the mesh such that its center of mass is at (0,0,0)
+
+// functions that compute the curvature of the mesh
+std::vector<real> max_curvature(Mesh const& mesh); // maximum curvature
+void curvatures(Mesh const& mesh, std::vector<real>& kappa, std::vector<real>& gamma); // mean and gaussian curvature
+
+
+// the following functions are useful for the simulation of multiple bubbles that are
+// for example initialized with different potentials or whose volume has to be computed
+// separately for time evolution with nonzero gas pressure
 
 Mesh join_meshes(std::vector<Mesh> const& list);
 std::vector<Mesh> split_by_loose_parts(Mesh const& mesh);

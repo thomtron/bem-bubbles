@@ -355,6 +355,53 @@ void LinLinSim::remesh(real L) {
     set_phi(new_phi);
 }
 
+PotVec compute_exterior_pot(CoordVec const& pos,Mesh M,PotVec phi,PotVec psi) {
+
+    size_t N = pos.size();
+
+    PotVec phi_ext(N);
+
+    #pragma omp parallel
+    {
+    
+    #pragma omp critical 
+    {
+    cout << "thread " << omp_get_thread_num() << " working..." << endl;
+    }
+
+    Integrator inter;
+    inter.set_quadrature(quadrature_19);
+
+    #pragma omp for
+    for(size_t i = 0;i < N; ++i) {
+        Bem::real val(0.0);
+        for(Triplet t : M.trigs) {
+            val += inter.get_exterior_potential(M.verts,t,phi,psi,pos[i]);
+        }
+        phi_ext[i] = val;
+
+        if(omp_get_thread_num() == 0)
+            cout << " Assembling matrices... progress (approx.): " << float(i+1)/N*100.0*omp_get_num_threads() << "%                                    \r" << flush;
+    }
+
+    #pragma omp critical 
+    {
+    cout << "thread " << omp_get_thread_num() << " done." << endl;
+    }
+
+    }
+
+    return phi_ext;
+}
+
+PotVec LinLinSim::exterior_pot(CoordVec const& positions) const {
+    Eigen::MatrixXd G,H;
+    assemble_matrices(G,H,mesh);
+    Eigen::VectorXd psi_l = solve_system(G,H*phi);
+
+    return compute_exterior_pot(positions,mesh,make_copy(phi),make_copy(psi_l));
+}
+
 
 
 } // namespace Bem

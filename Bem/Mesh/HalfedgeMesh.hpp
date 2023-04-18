@@ -8,6 +8,17 @@
 
 namespace Bem {
 
+// The HalfedgeMesh is a structure describing a triangle mesh by means of so called Halfedges.
+// Each edge has two Halfedges that point in oposite directions. A halfedge points always from one
+// vertex to the other and it has a pointer to its twin, to the next halfedge (rooting at the vertex
+// it points to) of the same triangle, to a vertex (where its root is), to its edge and its triangle.
+// To form a complete structure, the vertices, edges and triangles each have to have a pointer to one 
+// Halfedge they're connected with too. Although it isn't important which exact Halfedge they point to.
+// This structure is quite a bit more complicated, but it allows to jump easily from one neighbour of 
+// vertices/edges/triangles to another without the need to ever loop over all elements. Most applications
+// of this structure are presented in MeshManip.hpp/.cpp. In HalfedgeMesh.cpp we define the functions 
+// needed to translate between the Mesh and HalfedgeMesh representations.
+
 struct Halfedge {
     Halfedge* twin;
     Halfedge* next;

@@ -3,6 +3,11 @@
 
 namespace Bem {
 
+// The Triplet is a simple class holding three vertex indices representing a triangle.
+// the indices can be accessed directli via .a,.b,.c or by giving an index [0,1,2].
+// cyclic_reorder is a useful function which permutes the indices cyclically, such that
+// the index in the argument of the function is at the first place (a).
+
 class Triplet {
 public:
     size_t a,b,c;

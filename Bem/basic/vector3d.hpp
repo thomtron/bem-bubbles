@@ -3,6 +3,10 @@
 
 #include <cmath> // for sqrt()
 
+// vector3d is a lightweight 3D vector class, that supports basic vector arithmetic such as
+// addition, multiplication by scalars and dot- and vector product.Further one can normalize
+// vectors and test whether they are zero (optionally with a tolerance parameter).
+
 // the type real must support all operations that a floating point number supports.
 template<typename real>
 class vector3d {

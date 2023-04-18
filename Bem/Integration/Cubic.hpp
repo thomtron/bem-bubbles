@@ -5,6 +5,19 @@
 
 namespace Bem {
 
+// The class Cubic represents a cubic bezier triangle characterized by 
+// three edge vertices and the vertex normals at these vertices. From 
+// this information, one can construct the anchor points pijk in such
+// a way, that the surface normals are continuous at the edge vertices.
+// This is however not the case for the edges between these vertices. 
+// In the interior of the triangle, the parametrisation is smooth.
+// This class presents an alternative to Interpolator and is applied in
+// some Integrator functions as well optionally available for simulation
+// in the LinLinSim class. The integration functions corresponding to 
+// this class are however rather inefficient and whether the advantage in
+// accuracy due to the smoother representation is significant is not 
+// yet clear. This class thus can be regarded as a supplement to the main
+// code. 
 
 class Cubic {
 public:
@@ -23,7 +36,6 @@ public:
 
     vec3 interpolate(real u,real v) const {
         real w = 1.0 - u - v;
-        //if(u<0.0 or v<0.0 or w<0.0) std::cout << "error!";
         real u2 = u*u;
         real v2 = v*v;
         real w2 = w*w;
