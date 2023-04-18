@@ -6,9 +6,6 @@
 #include "Bem/Mesh/MeshManip.hpp"
 #include "Bem/Mesh/FittingTool.hpp"
 #include "Bem/Simulation/ColocSim.hpp"
-#include "Bem/Simulation/GalerkinSim.hpp"
-#include "Bem/Simulation/ConConGalerkinSim.hpp"
-#include "Bem/Simulation/ConLinGalerkinSim.hpp"
 
 #include <cmath>
  
@@ -16,139 +13,71 @@ using namespace std;
 
 using namespace Bem;
 
-int main() {
+// this program simulates two freely oscillating bubbles. It expects
+// the existence of a directory meshes in the build directory, where
+// the ply outputs will be stored.
 
-    //Icosphere ico(3);
+int main() {
 
     Mesh M;
 
-    // importing/adding meshes to M
-
     vector<Bem::real> vals;
     import_ply("../../first-tries/python-code/icosphere-ning/icos/ico-7.ply",M,vals);
+    // the path has to be adapted such that it points to a .ply file describing a unit icosphere
 
-    M.add(M,vec3(2.0,0.0,0.0));
-    M.add(M,vec3(1.0,1.0,0.0));
+    // here we prepare two different meshes M1 and M2, which we'll initialize with 
+    // different initial potentials p1 and p2
+    Mesh M1 = M;
+    M1.translate(vec3(-2,0,0));
+    PotVec p1(M.verts.size(),1.0);
+    Mesh M2 = M;
+    M2.translate(vec3(2,0,0));
+    PotVec p2(M.verts.size(),-1.0);
 
+    vector<PotVec> pots;
+    pots.push_back(p1);
+    pots.push_back(p2);
 
-    //Bem::real L = 8.2230;
-    Bem::real T = 30.0;
-    //size_t N(1500);
-    //Bem::real dt = L/static_cast<Bem::real>(N);
-    Bem::real dp = 0.04; //good value
-    //Bem::real dt = 0.0025;
-    //size_t N = T/dt;
+    vector<Mesh> bubbles;
+    bubbles.push_back(M1);
+    bubbles.push_back(M2);
+
+    // these two functions join the two meshes and potentials together
+    PotVec pot = expand_VD_to_joined(bubbles,pots);
+    M = join_meshes(bubbles);
+
+    size_t N(1500); // total number of steps
+    Bem::real dp = 0.15; // time-integration precision
     
-    // parameters of Wang_2014
-    Bem::real epsilon = 20.0;
-    Bem::real sigma = 0.1639103347599146; //(epsilon-1.0)/2.0; // for equilibrium
-    Bem::real gamma = 1.667; //3.0/2.0;
+    // initialization of simulation object
+    Bem::real epsilon = 10.0;
+    Bem::real sigma = (epsilon-1.0)/2.0; // for equilibrium
+    Bem::real gamma = 1.4;
     ColocSim sim(M,1.0,epsilon,sigma,gamma);
-    sim.set_phi(0.0);
-
-
-    ConConGalerkinSim concon(M,1.0,epsilon,sigma,gamma);
-    ConLinGalerkinSim conlin(M,1.0,epsilon,sigma,gamma);
-    GalerkinSim galerkin(M,1.0,epsilon,sigma,gamma);
-
-    concon.evolve_system(0.1);
-    conlin.evolve_system(0.1);
-    galerkin.evolve_system(0.1);
-
-    //sim.set_dp_balance(6.0);
-    Bem::real V_0(sim.get_volume());
-
-    //ofstream output("times.csv");
-    ofstream output("bubble-info.csv");
+    sim.set_phi(pot);
+    
+    sim.set_damping_factor(0.5);
+    Bem::real V_0(sim.get_volume()); 
+    sim.set_V_0(volume(M1)); // such that V_0 in sim is the initial volume of one individual bubble (the same for both) and not the total volume
 
     
     size_t substeps = 1;
-    //for(size_t i(0);i<N;++i){
-    size_t i(0);
-    //int remesh_ind(0);
-    while(sim.get_time()<T and i<10000){
+    for(size_t i(0);i<N;++i){
         cout << "\n----------\nCURRENT INDEX: " << i << "\n----------\n\n";
 
-        //output << i << ';' << sim.get_time() << ';' << sim.get_volume()/V_0 << endl; // *sqrt(p_inf-p_vap)/RM
-        
         cout << "sim-time: " << sim.get_time() << ", volume/V_0: " << sim.get_volume()/V_0 << endl;
-
-
-
-        /* TODO's:
-            - make good plot of taib-situation !
-            - better curvature vector
-            - dp-dx-plot
-            - evt. multistep method
-        */
-
         
         
         for(size_t j(0);j<substeps;++j) {
-            sim.evolve_system(dp);
-            //sim.remesh(0.15);
-            /*
-            Mesh tmp = sim.mesh;
-            relax_vertices(tmp);
-            vector<Bem::real> vals;
-            project_and_interpolate(tmp,vals,sim.mesh,sim.get_phi());
-            sim.mesh = tmp;
-            sim.set_phi(vals);
-            */
-
-            vector<Bem::real> phi(sim.get_phi());
-            vector<Bem::real> psi(sim.get_psi());
-
-            Bem::real mean_rad(0.0);
-            Bem::real max_rad(sim.mesh.verts[0].norm());
-            Bem::real min_rad = max_rad;
-
-            Bem::real mean_phi(0.0);
-            Bem::real max_phi(phi[0]);
-            Bem::real min_phi(phi[0]);
-
-            Bem::real mean_psi(0.0);
-            Bem::real max_psi(psi[0]);
-            Bem::real min_psi(psi[0]);
-            for(size_t i(0);i<sim.mesh.verts.size();++i) {
-                Bem::real rad = sim.mesh.verts[i].norm();
-                mean_rad += rad;
-                min_rad = min(rad,min_rad);
-                max_rad = max(rad,max_rad);
-                mean_psi += psi[i];
-                min_psi = min(min_psi,psi[i]);
-                max_psi = max(max_psi,psi[i]);
-                mean_phi += phi[i];
-                min_phi = min(min_phi,phi[i]);
-                max_phi = max(max_phi,phi[i]);
-            }
-            mean_rad /= static_cast<Bem::real>(sim.mesh.verts.size());
-            mean_phi /= static_cast<Bem::real>(sim.mesh.verts.size());
-            mean_psi /= static_cast<Bem::real>(sim.mesh.verts.size());
-            output << i << ';' << sim.get_time() << ';' << mean_rad << ';' << min_rad << ';' << max_rad;
-            output << ';' << mean_phi << ';' << min_phi << ';' << max_phi;
-            output << ';' << mean_psi << ';' << min_psi << ';' << max_psi << ';' << sim.mesh.verts.size() << endl;
+            sim.evolve_system_RK4(dp);
             
         }
 
         sim.export_mesh("meshes/mesh-"+to_string(i)+".ply");
 
-        if(i%10== 0) sim.remesh(0.2);
-
-        /*
-        if(int(sim.get_time()/0.05)>remesh_ind) {
-            sim.remesh(0.1);
-            remesh_ind = int(sim.get_time()/0.05);
-            cout << "remeshing # " << remesh_ind << endl;
-        }*/
-
-        i++;
+        if(i%6== 0) sim.remesh(0.2);
     }
-    sim.export_mesh("meshes/mesh-"+to_string(i)+".ply"); // N instead of i here normally
-
-
-    output.close();
-
+    sim.export_mesh("meshes/mesh-"+to_string(N)+".ply");
 
     return 0;
 
