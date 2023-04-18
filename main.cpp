@@ -22,8 +22,7 @@ int main() {
     Mesh M;
 
     vector<Bem::real> vals;
-    import_ply("../../first-tries/python-code/icosphere-ning/icos/ico-7.ply",M,vals);
-    // the path has to be adapted such that it points to a .ply file describing a unit icosphere
+    import_ply("../python_utils/ico-7.ply",M,vals);
 
     // here we prepare two different meshes M1 and M2, which we'll initialize with 
     // different initial potentials p1 and p2
