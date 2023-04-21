@@ -326,7 +326,7 @@ void LinLinSim::remesh(real L) {
     // explode by just calling remesh once)
     // The application of collapse_edges becomes less costly as 
     // soon as most of the edges verify the condition.
-    split_edges(manip,curvature_params,L*3.0/4.0);
+    split_edges(manip,curvature_params,L*4.0/3.0);
     flip_edges(manip,1);
     flip_edges(manip,1);
     relax_vertices(manip);
