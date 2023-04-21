@@ -251,7 +251,8 @@ vector<real> LinLinSim::curvature_param() const {
     // the following pieces of code can optionally be introduced in order
     // to make the remeshing parameter not only dependent on the maximum 
     // curvature but also on the gradients of phi on the mesh. Since we 
-    // haven't found yet a 
+    // haven't found yet the best fitting method, we do not include it in
+    // this version. Such adaptions are still subject of experimentation.
     /*
     vector<vec3> tangrad = generate_tangent_gradients(mesh,make_copy(phi));
 
