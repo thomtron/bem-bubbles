@@ -326,8 +326,10 @@ void LinLinSim::remesh(real L) {
     // explode by just calling remesh once)
     // The application of collapse_edges becomes less costly as 
     // soon as most of the edges verify the condition.
-    split_edges(manip,curvature_params,L*4.0/3.0);
-    flip_edges(manip,1);
+
+    //split_edges(manip,curvature_params,L*4.0/3.0); 
+    split_edges(manip,curvature_params,L*0.75); // This "shakes" the mesh up a bit, since most of the
+    flip_edges(manip,1);                        // edges are splitted -> gives better stability in some cases
     flip_edges(manip,1);
     relax_vertices(manip);
     collapse_edges(manip,curvature_params,L*4.0/5.0);
@@ -382,7 +384,7 @@ PotVec compute_exterior_pot(CoordVec const& pos,Mesh M,PotVec phi,PotVec psi) {
         phi_ext[i] = val;
 
         if(omp_get_thread_num() == 0)
-            cout << " Assembling matrices... progress (approx.): " << float(i+1)/N*100.0*omp_get_num_threads() << "%                                    \r" << flush;
+            cout << " Computing external potential... progress (approx.): " << float(i+1)/N*100.0*omp_get_num_threads() << "%                                    \r" << flush;
     }
 
     #pragma omp critical 

@@ -22,4 +22,13 @@ endforeach(directory)
 add_executable(main main.cpp)
 target_link_libraries(main simulation integration mesh)
 
+add_executable(pot-ext pot-ext.cpp)
+target_link_libraries(pot-ext simulation integration mesh)
+
+add_executable(oscillations oscillations.cpp)
+target_link_libraries(oscillations simulation integration mesh)
+
+add_executable(remeshing-for-spherical-harmonics remeshing-for-spherical-harmonics.cpp)
+target_link_libraries(remeshing-for-spherical-harmonics mesh)
+
 include_directories(${EIGEN_INCLUDE})

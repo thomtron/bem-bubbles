@@ -21,8 +21,7 @@ int main() {
 
     Mesh M;
 
-    vector<Bem::real> vals;
-    import_ply("../python_utils/ico-7.ply",M,vals);
+    import_ply("../python_utils/icosphere/ico-7.ply",M);
 
     // here we prepare two different meshes M1 and M2, which we'll initialize with 
     // different initial potentials p1 and p2
@@ -65,14 +64,13 @@ int main() {
         cout << "\n----------\nCURRENT INDEX: " << i << "\n----------\n\n";
 
         cout << "sim-time: " << sim.get_time() << ", volume/V_0: " << sim.get_volume()/V_0 << endl;
-        
-        
+
+        sim.export_mesh("meshes/mesh-"+to_string(i)+".ply");
+          
         for(size_t j(0);j<substeps;++j) {
             sim.evolve_system_RK4(dp);
             
         }
-
-        sim.export_mesh("meshes/mesh-"+to_string(i)+".ply");
 
         if(i%6== 0) sim.remesh(0.2);
     }
