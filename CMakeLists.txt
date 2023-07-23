@@ -25,6 +25,18 @@ target_link_libraries(main simulation integration mesh)
 add_executable(pot-ext pot-ext.cpp)
 target_link_libraries(pot-ext simulation integration mesh)
 
+add_executable(wall more-examples/wall.cpp)
+target_link_libraries(wall simulation integration mesh)
+
+add_executable(wall_check more-examples/wall_check.cpp)
+target_link_libraries(wall_check simulation integration mesh)
+
+add_executable(taib-cloud more-examples/taib-cloud.cpp)
+target_link_libraries(taib-cloud simulation integration mesh)
+
+add_executable(time-interpolation time-interpolation.cpp)
+target_link_libraries(time-interpolation simulation integration mesh)
+
 add_executable(oscillations oscillations.cpp)
 target_link_libraries(oscillations simulation integration mesh)
 

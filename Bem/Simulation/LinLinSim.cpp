@@ -313,7 +313,7 @@ void LinLinSim::remesh(real L) {
 
     if(min_elm_size > 0.0) {
         for(real& elm : curvature_params)
-            elm = min(elm,1.0/min_elm_size);
+            elm = max(min(elm,1.0/min_elm_size),1.0/max_elm_size);
     }
     
     HalfedgeMesh manip(generate_halfedges(mesh));

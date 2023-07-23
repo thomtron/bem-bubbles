@@ -17,7 +17,7 @@ using namespace Bem;
 Bem::real K,Omega,Pa;
 
 Bem::real waveform(vec3 x,Bem::real t) {
-    return Pa*sin(K*x.x - Omega*t);
+    return Pa*sin(K*x.x*0.0 - Omega*t);
 }
 
 int main(int argc, char *argv[]) {
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     Bem::real Gamma = 7.0/5.0;            // air is a dominantly diatomic gas
               Pa = pa/p_ref;              // acoustic pressure amplitude
 
-    Bem::real duration_max = 2.0;         // seconds
+    Bem::real duration_max = 5.0;         // seconds
     
     cout << "P_ref =      " << P_ref << endl;
     cout << "Sigma =      " << Sigma << endl;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
     // preparing simulation
 
     Mesh M;
-    import_ply("../python_utils/icosphere/ico-7.ply",M);
+    import_ply("../python_utils/icosphere/ico-10.ply",M);
 
     Bem::real dp = 0.02;
     size_t N(1000);
@@ -91,8 +91,9 @@ int main(int argc, char *argv[]) {
     ColocSim sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
-    sim.set_damping_factor(0.0);
+    sim.set_damping_factor(0.2);
     sim.set_minimum_element_size(0.1);
+    sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
     ofstream output(folder+"times.csv");
@@ -105,6 +106,8 @@ int main(int argc, char *argv[]) {
         
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
+
+        if(i%1 == 0) sim.remesh(0.12);
         
         auto start = high_resolution_clock::now();
 
@@ -114,14 +117,14 @@ int main(int argc, char *argv[]) {
         auto end = high_resolution_clock::now();
         duration<Bem::real> dur(end-start);
         Bem::real duration = dur.count();
-        
+        /*
         if(duration > duration_max) {
             cout << "duration limit for one iteration surpassed! - ending simulation." << endl;
             N = i+1;
             break;
         }
-
-        if(i%1 == 0) sim.remesh(0.1);
+        */
+        
     }
     output << N << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
     sim.export_mesh(folder+"mesh-"+to_string(N)+".ply");

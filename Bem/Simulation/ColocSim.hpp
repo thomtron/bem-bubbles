@@ -8,7 +8,7 @@
 
 #include <Eigen/Dense>
 
-#define MIRROR_MESH false
+#define MIRROR_MESH true
 
 namespace Bem {
 

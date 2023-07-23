@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <limits>
 
 #include "Simulation.hpp"
 
@@ -20,7 +21,8 @@ public:
     LinLinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
         :Simulation(initial,p_inf,epsilon,sigma,gamma,pressurefield),
         damping_factor(0.0),
-        min_elm_size(0.0) {
+        min_elm_size(0.0),
+        max_elm_size(std::numeric_limits<real>::max()) {
             phi = Eigen::VectorXd::Zero(phi_dim());
             psi = Eigen::VectorXd::Zero(psi_dim());
 
@@ -53,6 +55,10 @@ public:
         min_elm_size = value;
     }
 
+    void set_maximum_element_size(real value) {
+        max_elm_size = value;
+    }
+
 
     std::vector<real> kappa(Mesh const& m) const;
 
@@ -70,7 +76,7 @@ protected:
     std::vector<real> curvature_param() const;
 
     real damping_factor;
-    real min_elm_size;
+    real min_elm_size, max_elm_size;
     PotVec curvature_params;
     
 };

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-radius=($(seq 60e-6 5e-6 65e-6))
-pressure=($(seq 13e4 1e4 14e4))
+radius=($(seq 50e-6 5e-6 50e-6))
+pressure=($(seq 8e4 1e4 8e4))
 
 cd build
 parentdir=oscillation-results
@@ -13,6 +13,8 @@ do
     do
         dir=$parentdir/results-$pre-Pa-$rad-m
         mkdir $dir
+        cp ../oscillations.cpp $dir/oscillations.cpp
+        
         ./oscillations $rad $pre $dir
 
         for ply in "$dir"/*.ply
