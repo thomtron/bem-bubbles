@@ -110,6 +110,8 @@ CoordVec ConConGalerkinSim::generate_tangent_gradients(Mesh const& m, PotVec con
 
     vector<vector<size_t>> verts; // to include second neighbouring triangles 
                                   // otherwise, just take verts = generate_triangle_indices(m)
+                                  // Note, that we need triangle indices here and thus cannot
+                                  // simply use the function generate_2_ring()
     for(vector<size_t> const& elm : neighbours) {
         set<size_t> inds;
         for(size_t k : elm) {

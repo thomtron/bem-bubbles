@@ -16,7 +16,8 @@ using namespace chrono;
 namespace Bem {
 
 // assemble_matrices computes the matrix elements of the system matrices G and H for the given 
-// Mesh m. We discerntwo cases: linear interpolation or cubic interpolation (LINEAR)
+// Mesh m. We discern two times two cases: linear interpolation or cubic interpolation (LINEAR) and
+// Mirrored mesh or not (for the "image charges" technique) (MIRROR_MESH)
 void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const {
 #ifdef VERBOSE
     auto start = high_resolution_clock::now();
@@ -53,7 +54,12 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
         
         for(size_t i(0);i<N;++i) {
 #if LINEAR
+    #if MIRROR_MESH
+            int_local.integrate_Lin_coloc_local_mir(x,i,trip,G_loc,H_loc);
+    #else
             int_local.integrate_Lin_coloc_local(x,i,trip,G_loc,H_loc);
+
+    #endif
 #else
             int_local.integrate_Lin_coloc_local_cubic(x,n,i,trip,G_loc,H_loc);
 #endif
@@ -95,11 +101,43 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
     }
 
+    // now we put the terms corresponding to the pinned vertices on the left hand side of the equation G*psi = H*phi
+    // The N_pin columns on the right side of G will be overwritten by the negative N_pin columns from H. This is 
+    // no problem, since the former would evaluate to zero, since we impose psi=0 on the pinned vertices. The last 
+    // N_pin values of x (in G*x = H*phi) will be the potential values at the boundary.
+
+    for(size_t i(m.verts.size()-N_pin);i<m.verts.size();++i) {
+        G.col(i) = -H.col(i);
+        H.col(i) *= 0.0;
+    }
+
 #ifdef VERBOSE
     cout << endl;
     auto end = high_resolution_clock::now();
     cout << "used time = " << duration_cast<duration<double>>(end-start).count() << " s. " << endl;
 #endif
 }
+
+
+CoordVec ColocSimPin::position_t(Mesh const& m,PotVec& pot) const {
+    //cout << "myfunc!" << endl;
+    PotVec x;
+    CoordVec result = LinLinSim::position_t(m,pot,x);
+    for(size_t i(m.verts.size()-N_pin);i<m.verts.size();++i) {
+        result[i] = vec3(); // set velocity at pinned nodes to zero
+        pot[i] = x[i]; // update the (yet unknown) potential value at the pinned nodes
+        //cout << "pot(" << i << ") = " << x[i] << endl;
+    }
+    return result;
+}
+
+/* presumably there is no need to change...
+PotVec   ColocSimPin::pot_t(Mesh const& m,CoordVec const& gradients, real t) const {
+
+}
+
+PotVec   ColocSimPin::pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const {
+
+}*/
 
 } // namespace Bem

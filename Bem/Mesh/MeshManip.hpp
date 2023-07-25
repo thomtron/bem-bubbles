@@ -25,6 +25,11 @@ void project   (Mesh& mesh, Mesh const& other);
 void project_and_interpolate(Mesh& mesh, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
 void project_and_interpolate(Mesh& mesh, std::vector<vec3> const& vertex_normals, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
 
+Mesh l2smooth(Mesh mesh);
+Mesh l2smooth(Mesh mesh, std::vector<size_t> const& vert_inds);
+Mesh l2smooth(Mesh mesh, std::vector<real>& pot);
+Mesh l2smooth(Mesh mesh, std::vector<real>& pot, std::vector<size_t> const& vert_inds);
+
 } // namespace Bem
 
 #endif // MESHMANIP_HPP

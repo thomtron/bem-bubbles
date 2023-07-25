@@ -25,6 +25,12 @@ target_link_libraries(main simulation integration mesh)
 add_executable(pot-ext pot-ext.cpp)
 target_link_libraries(pot-ext simulation integration mesh)
 
+add_executable(color color.cpp)
+target_link_libraries(color mesh)
+
+add_executable(pinned-bubble pinned-bubble.cpp)
+target_link_libraries(pinned-bubble simulation integration mesh)
+
 add_executable(wall more-examples/wall.cpp)
 target_link_libraries(wall simulation integration mesh)
 

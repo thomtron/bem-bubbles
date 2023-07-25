@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 
 #define LINEAR true
+#define MIRROR_MESH true
 
 namespace Bem {
 
@@ -62,7 +63,8 @@ public:
 
     std::vector<real> kappa(Mesh const& m) const;
 
-    CoordVec position_t(Mesh const& m,PotVec const& pot) const;
+    virtual CoordVec position_t(Mesh const& m,PotVec& pot) const;
+    virtual CoordVec position_t(Mesh const& m,PotVec& pot, PotVec& x) const;
     PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
     PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 

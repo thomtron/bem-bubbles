@@ -1086,7 +1086,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
 
     // creating surface fits for each vertex of 'other'
     vector<vec3> other_normals = generate_vertex_normals(other);
-    vector<vector<size_t>> verts = generate_neighbours(other); //generate_2_ring();
+    vector<vector<size_t>> verts = generate_neighbours(other); // alternatively generate_2_ring();
     vector<FittingTool> fits(other.verts.size());
     for(size_t i(0);i<other.verts.size();++i) {
         vector<vec3> positions;
@@ -1199,6 +1199,80 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
 
     f_res.clear();
     f_res = result;
+}
+
+Mesh l2smooth(Mesh mesh,vector<size_t> const& vert_inds) {
+    vector<vec3> normals = generate_vertex_normals(mesh);
+    vector<vector<size_t>> ring = generate_2_ring(mesh);
+    vector<vec3> copy = mesh.verts;
+    for(size_t i : vert_inds) {
+        vector<vec3> positions;
+        positions.push_back(copy[i]);
+        for(size_t j : ring[i])
+            positions.push_back(copy[j]);
+
+        FittingTool fit;
+        fit.compute_quadratic_fit(normals[i],copy[i],positions);
+        // refine the normal and recompute the fit (optional)
+        vec3 ref_norm = fit.get_normal();
+        fit.compute_quadratic_fit(ref_norm,copy[i],positions);
+
+        mesh.verts[i] = fit.get_position(0.0,0.0);
+    }
+
+    return mesh;
+}
+
+Mesh l2smooth(Mesh mesh) {
+    vector<size_t> inds(mesh.verts.size());
+    iota(inds.begin(),inds.end(),0);
+    return l2smooth(mesh,inds);
+}
+
+Mesh l2smooth(Mesh mesh, std::vector<real>& pot) {
+    vector<size_t> inds(mesh.verts.size());
+    iota(inds.begin(),inds.end(),0);
+    return l2smooth(mesh,pot,inds);
+}
+
+Mesh l2smooth(Mesh mesh, std::vector<real>& pot, std::vector<size_t> const& vert_inds) {
+    vector<vec3> normals = generate_vertex_normals(mesh);
+    vector<vector<size_t>> ring = generate_2_ring(mesh);
+    vector<vec3> copy = mesh.verts;
+    vector<real> copy_pot = pot;
+    for(size_t i : vert_inds) {
+        vector<vec3> positions;
+        vector<real> potential;
+        positions.push_back(copy[i]);
+        potential.push_back(copy_pot[i]);
+        for(size_t j : ring[i]){
+            positions.push_back(copy[j]);
+            potential.push_back(copy_pot[j]);
+        }
+
+        FittingTool fit;
+        fit.compute_quadratic_fit(normals[i],copy[i],positions);
+        // refine the normal and recompute the fit (optional)
+        vec3 ref_norm = fit.get_normal();
+        fit.compute_quadratic_fit(ref_norm,copy[i],positions);
+
+        mesh.verts[i] = fit.get_position(0.0,0.0);
+        
+        
+        CoordSystem system(fit.copy_coord_system());
+        for(size_t j(0);j<positions.size();++j) {
+            vec3 trans = system.transform(positions[j]);
+            trans.z = potential[j];
+            positions[j] = trans;
+        }
+
+        fit.compute_quadratic_fit(vec3(0.0,0.0,1.0),vec3(),positions);
+        vector<real> params(fit.get_params());
+
+        pot[i] = params[0];
+    }
+
+    return mesh;
 }
 
 } // namespace Bem

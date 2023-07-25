@@ -8,8 +8,6 @@
 
 #include <Eigen/Dense>
 
-#define MIRROR_MESH true
-
 namespace Bem {
 
 class ColocSim : public LinLinSim {

@@ -101,6 +101,7 @@ void ColocSim::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh con
 #endif
     }
 
+
 #ifdef VERBOSE
     cout << endl;
     auto end = high_resolution_clock::now();

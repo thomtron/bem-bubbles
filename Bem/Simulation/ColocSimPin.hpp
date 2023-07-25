@@ -27,6 +27,8 @@ public:
             // note that the potential at infinity also should come into the linear equation (see master thesis p. 15) - this is an error that was made when 
             // doing the numerical experiments with the oscillating bubbles! Have to investigate how this affects the results! However, the results look 
             // astonishingly similar to experimental results, which indicates that not a large deviation must be expected (or some better insights...)
+
+            // ignore the above, plans have shifted!
             
 #ifdef VERBOSE
             std::cout << "This simulation has linear elements for phi and psi." << std::endl;
@@ -36,6 +38,10 @@ public:
     virtual ~ColocSimPin() {}
 
     virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
+
+    virtual CoordVec position_t(Mesh const& m,PotVec& pot) const override;
+    //PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
+    //PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 
 private:
     size_t N_pin;

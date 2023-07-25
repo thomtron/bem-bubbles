@@ -21,13 +21,19 @@ using namespace chrono;
 
 namespace Bem {
 
-CoordVec LinLinSim::position_t(Mesh const& m,PotVec const& pot) const {
+CoordVec LinLinSim::position_t(Mesh const& m,PotVec& pot) const {
+    PotVec dummy;
+    return position_t(m,pot,dummy);
+}
+
+CoordVec LinLinSim::position_t(Mesh const& m,PotVec& pot, PotVec& x) const {
     CoordVec result;
 
     // setting up the system of equations and solving it.
     Eigen::MatrixXd G,H;
     assemble_matrices(G,H,m);
     Eigen::VectorXd psi_l = solve_system(G,H*make_copy(pot));
+    x = make_copy(psi_l);
 
     vector<vec3> normals = generate_triangle_normals(m);
     vector<vector<size_t>> triangle_indices = generate_triangle_indices(m);
