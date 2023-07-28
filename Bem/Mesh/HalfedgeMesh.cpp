@@ -40,26 +40,39 @@ void HalfedgeMesh::copy(HalfedgeMesh const& other) {
     edges = vector<Halfedge*>(other.edges.size(),nullptr);
     trigs = vector<Halfedge*>(other.trigs.size(),nullptr);
     for(Halfedge* elm : other.edges) {
-        Halfedge* A = new Halfedge;
-        Halfedge* B = new Halfedge;
+        if(elm->twin == elm) { // if at boundary
+            Halfedge* A = new Halfedge;
 
-        A->vert = elm->vert;
-        A->edge = elm->edge;
-        A->trig = elm->trig;
-        A->twin = B;
+            A->vert = elm->vert;
+            A->edge = elm->edge;
+            A->trig = elm->trig;
+            A->twin = A;
 
-        B->vert = elm->twin->vert;
-        B->edge = elm->twin->edge;
-        B->trig = elm->twin->trig;
-        B->twin = A;
+            verts[A->vert] = A;
+            edges[A->edge] = A;
+            trigs[A->trig] = A;
+        } else {
+            Halfedge* A = new Halfedge;
+            Halfedge* B = new Halfedge;
 
-        verts[A->vert] = A;
-        edges[A->edge] = A;
-        trigs[A->trig] = A;
+            A->vert = elm->vert;
+            A->edge = elm->edge;
+            A->trig = elm->trig;
+            A->twin = B;
 
-        verts[B->vert] = B;
-        edges[B->edge] = B;
-        trigs[B->trig] = B; 
+            B->vert = elm->twin->vert;
+            B->edge = elm->twin->edge;
+            B->trig = elm->twin->trig;
+            B->twin = A;
+
+            verts[A->vert] = A;
+            edges[A->edge] = A;
+            trigs[A->trig] = A;
+
+            verts[B->vert] = B;
+            edges[B->edge] = B;
+            trigs[B->trig] = B; 
+        }
     }
     for(Halfedge* elm : other.trigs) {
         size_t trig_ind = elm->trig;
@@ -133,23 +146,44 @@ HalfedgeMesh generate_halfedges(Mesh const& mesh) {
     iota(edge_inds.begin(),edge_inds.end(),0);
     sort(edge_inds.begin(),edge_inds.end(),[&edges](size_t a,size_t b) { return edges[a] < edges[b]; });
 
-    for(size_t i(0);i<K/2;++i) {
+    size_t edge_ind(0);
+    for(size_t i(0);i<K;++i) {
 
-        size_t ind1 = edge_inds[2*i];
-        size_t ind2 = edge_inds[2*i+1];
+        if(i == K-1 or edges[edge_inds[i]]<edges[edge_inds[i+1]]) { 
+            // if the edge was pushed back two times (from two triangles), the edge is
+            // an interior edge. The present condition evaluates false, since the two 
+            // indices are identical. In the other case, the edge was pushed back only
+            // once and therefore we have a boundary edge, the case treated here:
 
-        Halfedge* A = edge_halfs[ind1];
-        Halfedge* B = edge_halfs[ind2];
+            size_t ind = edge_inds[i];
+            Halfedge* A = edge_halfs[ind];
 
-        // now we can add the final informations to the halfedges
+            A->twin = A;
+            A->edge = edge_ind;
 
-        A->twin = B;
-        B->twin = A;
+            result.edges.push_back(A);
 
-        A->edge = i;
-        B->edge = i;
+        } else {
 
-        result.edges.push_back(A);
+            size_t ind1 = edge_inds[i];
+            i++;
+            size_t ind2 = edge_inds[i];
+
+            Halfedge* A = edge_halfs[ind1];
+            Halfedge* B = edge_halfs[ind2];
+
+            // now we can add the final informations to the halfedges
+
+            A->twin = B;
+            B->twin = A;
+
+            A->edge = edge_ind;
+            B->edge = edge_ind;
+
+            result.edges.push_back(A);
+        }
+
+        edge_ind++;
 
     }
 

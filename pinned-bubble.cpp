@@ -138,6 +138,8 @@ int main() {
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
 
+        if(i%10 == 0) sim.remesh(0.2);
+
         if(i%10 == 0){
             vector<size_t> inds(sim.mesh.verts.size() - npin);
             iota(inds.begin(),inds.end(),0);

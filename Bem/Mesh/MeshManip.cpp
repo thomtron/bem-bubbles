@@ -34,6 +34,7 @@ void check_validity(HalfedgeMesh const& mesh) {
     }
     for(Halfedge* elm : mesh.edges) {
         if(elm->twin->twin != elm) error_tt++;                  // check that twin of twin is element itself
+        if(mesh.edges[elm->edge] != elm) error_edgeind++;       // check that edge indices are correct
         if(mesh.edges[elm->twin->edge] != elm) error_edgeind++; // check that edge indices are correct
     }
 
@@ -130,78 +131,83 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
             Halfedge* edge01(mesh.edges[i]);
             Halfedge* edge10(edge01->twin);
 
-            mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
-            mesh.verts.push_back(edge10);
-            size_t new_index(mesh.verts.size()-1);
+            if(edge01 == edge10) {
+                // a remplir
+            } else {
 
-            // S for straight, A, B for the two sides 
-            // _0 are Halfedges going out from new_index
-            size_t K(mesh.edges.size());
-            size_t M(mesh.trigs.size());
-            Halfedge* S_0 = new Halfedge;
-            Halfedge* S_1 = new Halfedge;
-            Halfedge* A_0 = new Halfedge;
-            Halfedge* A_1 = new Halfedge;
-            Halfedge* B_0 = new Halfedge;
-            Halfedge* B_1 = new Halfedge;
+                mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
+                mesh.verts.push_back(edge10);
+                size_t new_index(mesh.verts.size()-1);
 
-            S_0->edge = K;
-            S_0->trig = M;
-            S_0->next = edge01->next;
-            S_0->vert = new_index;
-            S_0->twin = S_1;
+                // S for straight, A, B for the two sides 
+                // _0 are Halfedges going out from new_index
+                size_t K(mesh.edges.size());
+                size_t M(mesh.trigs.size());
+                Halfedge* S_0 = new Halfedge;
+                Halfedge* S_1 = new Halfedge;
+                Halfedge* A_0 = new Halfedge;
+                Halfedge* A_1 = new Halfedge;
+                Halfedge* B_0 = new Halfedge;
+                Halfedge* B_1 = new Halfedge;
 
-            S_1->edge = K;
-            S_1->trig = M+1;
-            S_1->next = B_0;
-            S_1->vert = edge01->next->vert;
-            S_1->twin = S_0;
-          
-            A_0->edge = K+1;
-            A_0->trig = edge01->trig;
-            A_0->next = edge01->next->next;
-            A_0->vert = new_index;
-            A_0->twin = A_1;
+                S_0->edge = K;
+                S_0->trig = M;
+                S_0->next = edge01->next;
+                S_0->vert = new_index;
+                S_0->twin = S_1;
+
+                S_1->edge = K;
+                S_1->trig = M+1;
+                S_1->next = B_0;
+                S_1->vert = edge01->next->vert;
+                S_1->twin = S_0;
             
-            A_1->edge = K+1;
-            A_1->trig = M;
-            A_1->next = S_0;
-            A_1->vert = edge01->next->next->vert;
-            A_1->twin = A_0;
+                A_0->edge = K+1;
+                A_0->trig = edge01->trig;
+                A_0->next = edge01->next->next;
+                A_0->vert = new_index;
+                A_0->twin = A_1;
+                
+                A_1->edge = K+1;
+                A_1->trig = M;
+                A_1->next = S_0;
+                A_1->vert = edge01->next->next->vert;
+                A_1->twin = A_0;
 
-            B_0->edge = K+2;
-            B_0->trig = M+1;
-            B_0->next = edge10->next->next;
-            B_0->vert = new_index;
-            B_0->twin = B_1;
+                B_0->edge = K+2;
+                B_0->trig = M+1;
+                B_0->next = edge10->next->next;
+                B_0->vert = new_index;
+                B_0->twin = B_1;
 
-            B_1->edge = K+2;
-            B_1->trig = edge10->trig;
-            B_1->next = edge10;
-            B_1->vert = edge10->next->next->vert;
-            B_1->twin = B_0;
-
-
-            edge01->next->trig = M;
-            edge01->next->next = A_1;
-            edge01->next = A_0;
-
-            edge10->next->next->trig = M+1;
-            edge10->next->next->next = S_1;
-            edge10->next->next = B_1;
-            edge10->vert = new_index;
-
-            mesh.verts[S_1->vert] = S_1;
-            mesh.trigs[edge01->trig] = edge01;
-            mesh.trigs[edge10->trig] = edge10;
+                B_1->edge = K+2;
+                B_1->trig = edge10->trig;
+                B_1->next = edge10;
+                B_1->vert = edge10->next->next->vert;
+                B_1->twin = B_0;
 
 
-            mesh.trigs.push_back(S_0);
-            mesh.trigs.push_back(S_1);
+                edge01->next->trig = M;
+                edge01->next->next = A_1;
+                edge01->next = A_0;
 
-            mesh.edges.push_back(S_0);
-            mesh.edges.push_back(A_0);
-            mesh.edges.push_back(B_0);
+                edge10->next->next->trig = M+1;
+                edge10->next->next->next = S_1;
+                edge10->next->next = B_1;
+                edge10->vert = new_index;
+
+                mesh.verts[S_1->vert] = S_1;
+                mesh.trigs[edge01->trig] = edge01;
+                mesh.trigs[edge10->trig] = edge10;
+
+
+                mesh.trigs.push_back(S_0);
+                mesh.trigs.push_back(S_1);
+
+                mesh.edges.push_back(S_0);
+                mesh.edges.push_back(A_0);
+                mesh.edges.push_back(B_0);
+            }
 
         }
     }
@@ -255,91 +261,96 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
         Halfedge* edge01(mesh.edges[i]);
         Halfedge* edge10(edge01->twin);
 
-        real curv_0 = curvature[edge01->vert];
-        real curv_1 = curvature[edge10->vert];
+        if(edge01 == edge10) {
 
-        real L_max_2 = 0.0;
-        bool zero_curv = false;
-        if(curv_0+curv_1 != 0.0) {
-            L_max_2 = multiplicator*2.0/(curv_0+curv_1);
-            L_max_2 = L_max_2*L_max_2;
-        }
+        } else {
 
-        if(lengths[i] > L_max_2 and not zero_curv ) {
+            real curv_0 = curvature[edge01->vert];
+            real curv_1 = curvature[edge10->vert];
 
-            mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
-            mesh.verts.push_back(edge10);
-            curvature.push_back(0.5*(curv_0+curv_1));
-            size_t new_index(mesh.verts.size()-1);
+            real L_max_2 = 0.0;
+            bool zero_curv = false;
+            if(curv_0+curv_1 != 0.0) {
+                L_max_2 = multiplicator*2.0/(curv_0+curv_1);
+                L_max_2 = L_max_2*L_max_2;
+            }
 
-            // S for straight, A, B for the two sides // _0 are from new_index outgoing Halfedges
-            size_t K(mesh.edges.size());
-            size_t M(mesh.trigs.size());
-            Halfedge* S_0 = new Halfedge;
-            Halfedge* S_1 = new Halfedge;
-            Halfedge* A_0 = new Halfedge;
-            Halfedge* A_1 = new Halfedge;
-            Halfedge* B_0 = new Halfedge;
-            Halfedge* B_1 = new Halfedge;
+            if(lengths[i] > L_max_2 and not zero_curv ) {
 
-            S_0->edge = K;
-            S_0->trig = M;
-            S_0->next = edge01->next;
-            S_0->vert = new_index;
-            S_0->twin = S_1;
+                mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
+                mesh.verts.push_back(edge10);
+                curvature.push_back(0.5*(curv_0+curv_1));
+                size_t new_index(mesh.verts.size()-1);
 
-            S_1->edge = K;
-            S_1->trig = M+1;
-            S_1->next = B_0;
-            S_1->vert = edge01->next->vert;
-            S_1->twin = S_0;
-          
-            A_0->edge = K+1;
-            A_0->trig = edge01->trig;
-            A_0->next = edge01->next->next;
-            A_0->vert = new_index;
-            A_0->twin = A_1;
+                // S for straight, A, B for the two sides // _0 are from new_index outgoing Halfedges
+                size_t K(mesh.edges.size());
+                size_t M(mesh.trigs.size());
+                Halfedge* S_0 = new Halfedge;
+                Halfedge* S_1 = new Halfedge;
+                Halfedge* A_0 = new Halfedge;
+                Halfedge* A_1 = new Halfedge;
+                Halfedge* B_0 = new Halfedge;
+                Halfedge* B_1 = new Halfedge;
+
+                S_0->edge = K;
+                S_0->trig = M;
+                S_0->next = edge01->next;
+                S_0->vert = new_index;
+                S_0->twin = S_1;
+
+                S_1->edge = K;
+                S_1->trig = M+1;
+                S_1->next = B_0;
+                S_1->vert = edge01->next->vert;
+                S_1->twin = S_0;
             
-            A_1->edge = K+1;
-            A_1->trig = M;
-            A_1->next = S_0;
-            A_1->vert = edge01->next->next->vert;
-            A_1->twin = A_0;
+                A_0->edge = K+1;
+                A_0->trig = edge01->trig;
+                A_0->next = edge01->next->next;
+                A_0->vert = new_index;
+                A_0->twin = A_1;
+                
+                A_1->edge = K+1;
+                A_1->trig = M;
+                A_1->next = S_0;
+                A_1->vert = edge01->next->next->vert;
+                A_1->twin = A_0;
 
-            B_0->edge = K+2;
-            B_0->trig = M+1;
-            B_0->next = edge10->next->next;
-            B_0->vert = new_index;
-            B_0->twin = B_1;
+                B_0->edge = K+2;
+                B_0->trig = M+1;
+                B_0->next = edge10->next->next;
+                B_0->vert = new_index;
+                B_0->twin = B_1;
 
-            B_1->edge = K+2;
-            B_1->trig = edge10->trig;
-            B_1->next = edge10;
-            B_1->vert = edge10->next->next->vert;
-            B_1->twin = B_0;
-
-
-            edge01->next->trig = M;
-            edge01->next->next = A_1;
-            edge01->next = A_0;
-
-            edge10->next->next->trig = M+1;
-            edge10->next->next->next = S_1;
-            edge10->next->next = B_1;
-            edge10->vert = new_index;
-
-            mesh.verts[S_1->vert] = S_1;
-            mesh.trigs[edge01->trig] = edge01;
-            mesh.trigs[edge10->trig] = edge10;
+                B_1->edge = K+2;
+                B_1->trig = edge10->trig;
+                B_1->next = edge10;
+                B_1->vert = edge10->next->next->vert;
+                B_1->twin = B_0;
 
 
-            mesh.trigs.push_back(S_0);
-            mesh.trigs.push_back(S_1);
+                edge01->next->trig = M;
+                edge01->next->next = A_1;
+                edge01->next = A_0;
 
-            mesh.edges.push_back(S_0);
-            mesh.edges.push_back(A_0);
-            mesh.edges.push_back(B_0);
+                edge10->next->next->trig = M+1;
+                edge10->next->next->next = S_1;
+                edge10->next->next = B_1;
+                edge10->vert = new_index;
 
+                mesh.verts[S_1->vert] = S_1;
+                mesh.trigs[edge01->trig] = edge01;
+                mesh.trigs[edge10->trig] = edge10;
+
+
+                mesh.trigs.push_back(S_0);
+                mesh.trigs.push_back(S_1);
+
+                mesh.edges.push_back(S_0);
+                mesh.edges.push_back(A_0);
+                mesh.edges.push_back(B_0);
+
+            }
         }
     }
 #ifdef VERBOSE
@@ -429,152 +440,157 @@ void collapse_edges (HalfedgeMesh& mesh, real L_min) {
             Halfedge* halfedge_A = mesh.edges[k];
             Halfedge* halfedge_B = halfedge_A->twin;
 
-            size_t vert_0 = halfedge_A->vert;
-            size_t vert_1 = halfedge_B->vert;
+            if(halfedge_A == halfedge_B) {
 
-            size_t vert_A = halfedge_A->next->next->vert;
-            size_t vert_B = halfedge_B->next->next->vert;
+            } else {
 
-            size_t num_paths(0);
+                size_t vert_0 = halfedge_A->vert;
+                size_t vert_1 = halfedge_B->vert;
 
-            Halfedge* finder = mesh.verts[vert_0];
-            Halfedge* init = finder;
-            do {
-                Halfedge* second = finder->next;
-                Halfedge* second_init = second;
+                size_t vert_A = halfedge_A->next->next->vert;
+                size_t vert_B = halfedge_B->next->next->vert;
+
+                size_t num_paths(0);
+
+                Halfedge* finder = mesh.verts[vert_0];
+                Halfedge* init = finder;
                 do {
-                    if(second->next->vert == vert_1) {
-                        num_paths++;
-                    }
-                    second = second->twin->next;
-                } while(second != second_init);
-
-                finder = finder->twin->next;
-            } while(finder != init);
-
-
-            // Ensure that we wont produce "triangle appendices".
-            // The edge is only collapsed, if it is geometrically admissible. If 
-            // a triangle gets turned over or an appendix of zero
-            // thickness would be produced (which is prevented by ensuring that
-            // there are exactly two paths composed of two edges connecting the 
-            // two vertices vert_0 and vert_1), we won't collapse the edge.
-            // For this reason it is important to apply this function iteratively 
-            // for good results.
-            if(num_paths == 2) {
-
-                // test whether all triangles are still
-                // facing (approximately) in the right direction
-
-                vec3 new_pos(0.5*(mesh.vpos[vert_0] + mesh.vpos[vert_1]));
-                vec3 old_pos(mesh.vpos[vert_1]);
-
-                bool valid = true;
-
-                double limit_value = 0.8;
-
-                Halfedge* u(halfedge_A->next->twin);
-                do {
-                    if(u == halfedge_B->next->next) {
-                        u = halfedge_B->next->twin;
-                        old_pos = mesh.vpos[vert_0];
-                    }
-                    vec3 a = mesh.vpos[u->vert] - mesh.vpos[u->next->next->vert];
-                    vec3 b = mesh.vpos[u->next->next->vert] - new_pos;
-                    vec3 c = mesh.vpos[u->next->next->vert] - old_pos;
-
-                    c = c.vec(a);
-                    c.normalize();
-                    b = b.vec(a);
-                    b.normalize();
-
-                    if(b.dot(c)<limit_value) valid = false;
-                    u = u->next->twin;
-
-                } while(valid and u != halfedge_A->next->next);
-
-
-                if(valid) {
-
-                    // remove the elements
-
-                    // remove the three edges
-                    remove_edge(mesh.edges,halfedge_A->next->edge);
-                    remove_edge(mesh.edges,halfedge_B->next->next->edge);
-                    remove_edge(mesh.edges,halfedge_A->edge);
-
-                    swap(lengths[halfedge_A->next->edge],lengths.back());
-                    lengths.pop_back();
-                    swap(lengths[halfedge_B->next->next->edge],lengths.back());
-                    lengths.pop_back();
-                    swap(lengths[halfedge_A->edge],lengths.back());
-                    lengths.pop_back();
-
-
-                    // remove the two faces
-                    remove_face(mesh.trigs,halfedge_A->trig);
-                    remove_face(mesh.trigs,halfedge_B->trig);
-
-
-                    // make sure that vert_0 has an halfedge index that wont be removed
-                    // the same for vert_A and vert_B
-                    mesh.verts[vert_0] = halfedge_A->next->next->twin;
-                    mesh.verts[vert_A] = halfedge_A->next->twin;
-                    mesh.verts[vert_B] = halfedge_B->next->twin;
-
-                    remove_vertex(mesh.verts,vert_1);
-
-                    // adjust the real vertices of the mesh
-                    mesh.vpos[vert_0] = new_pos;
-                    swap(mesh.vpos[vert_1],mesh.vpos.back());
-                    mesh.vpos.pop_back();
-
-                    // in case that we just swapped vert_0, adjust it here (since we use it later on)
-                    if(vert_0 == mesh.verts.size()) vert_0 = vert_1;
-
-                    // move pointers from vert_1 to vert_0
-                    Halfedge* current = halfedge_A->next;
-                    while( current != halfedge_B) {
-                        current->vert = vert_0;
-                        current = current->twin->next;
-                    }
-
-                    // make sure that the edges of triangle A and B that WEREN'T removed, 
-                    // will still have a valid halfedge pointer
-                    mesh.edges[halfedge_A->next->next->edge] = halfedge_A->next->next->twin;
-                    mesh.edges[halfedge_B->next->edge] = halfedge_B->next->twin;
-
-                    // now handle twins (before we destroy structure)
-                    halfedge_A->next->next->twin->twin = halfedge_A->next->twin;
-                    halfedge_A->next->twin->twin = halfedge_A->next->next->twin;
-                    halfedge_A->next->twin->edge = halfedge_A->next->next->edge;
-
-                    halfedge_B->next->next->twin->twin = halfedge_B->next->twin;
-                    halfedge_B->next->twin->twin = halfedge_B->next->next->twin;
-                    halfedge_B->next->next->twin->edge = halfedge_B->next->edge;
-
-                    // finally remove the halfedges
-
-                    delete halfedge_A->next->next;
-                    delete halfedge_A->next;
-                    delete halfedge_A;
-
-                    delete halfedge_B->next->next;
-                    delete halfedge_B->next;
-                    delete halfedge_B;
-
-                    // adjust lengths
-
-                    Halfedge* half_0 = mesh.verts[vert_0];
-                    current = half_0;
+                    Halfedge* second = finder->next;
+                    Halfedge* second_init = second;
                     do {
-                        lengths[current->edge] = (mesh.vpos[current->next->vert]-mesh.vpos[current->vert]).norm2();
-                        current = current->twin->next;
-                    } while( current != half_0);
+                        if(second->next->vert == vert_1) {
+                            num_paths++;
+                        }
+                        second = second->twin->next;
+                    } while(second != second_init);
 
-                    
-                    k = 0;
+                    finder = finder->twin->next;
+                } while(finder != init);
 
+
+                // Ensure that we wont produce "triangle appendices".
+                // The edge is only collapsed, if it is geometrically admissible. If 
+                // a triangle gets turned over or an appendix of zero
+                // thickness would be produced (which is prevented by ensuring that
+                // there are exactly two paths composed of two edges connecting the 
+                // two vertices vert_0 and vert_1), we won't collapse the edge.
+                // For this reason it is important to apply this function iteratively 
+                // for good results.
+                if(num_paths == 2) {
+
+                    // test whether all triangles are still
+                    // facing (approximately) in the right direction
+
+                    vec3 new_pos(0.5*(mesh.vpos[vert_0] + mesh.vpos[vert_1]));
+                    vec3 old_pos(mesh.vpos[vert_1]);
+
+                    bool valid = true;
+
+                    double limit_value = 0.8;
+
+                    Halfedge* u(halfedge_A->next->twin);
+                    do {
+                        if(u == halfedge_B->next->next) {
+                            u = halfedge_B->next->twin;
+                            old_pos = mesh.vpos[vert_0];
+                        }
+                        vec3 a = mesh.vpos[u->vert] - mesh.vpos[u->next->next->vert];
+                        vec3 b = mesh.vpos[u->next->next->vert] - new_pos;
+                        vec3 c = mesh.vpos[u->next->next->vert] - old_pos;
+
+                        c = c.vec(a);
+                        c.normalize();
+                        b = b.vec(a);
+                        b.normalize();
+
+                        if(b.dot(c)<limit_value) valid = false;
+                        u = u->next->twin;
+
+                    } while(valid and u != halfedge_A->next->next);
+
+
+                    if(valid) {
+
+                        // remove the elements
+
+                        // remove the three edges
+                        remove_edge(mesh.edges,halfedge_A->next->edge);
+                        remove_edge(mesh.edges,halfedge_B->next->next->edge);
+                        remove_edge(mesh.edges,halfedge_A->edge);
+
+                        swap(lengths[halfedge_A->next->edge],lengths.back());
+                        lengths.pop_back();
+                        swap(lengths[halfedge_B->next->next->edge],lengths.back());
+                        lengths.pop_back();
+                        swap(lengths[halfedge_A->edge],lengths.back());
+                        lengths.pop_back();
+
+
+                        // remove the two faces
+                        remove_face(mesh.trigs,halfedge_A->trig);
+                        remove_face(mesh.trigs,halfedge_B->trig);
+
+
+                        // make sure that vert_0 has an halfedge index that wont be removed
+                        // the same for vert_A and vert_B
+                        mesh.verts[vert_0] = halfedge_A->next->next->twin;
+                        mesh.verts[vert_A] = halfedge_A->next->twin;
+                        mesh.verts[vert_B] = halfedge_B->next->twin;
+
+                        remove_vertex(mesh.verts,vert_1);
+
+                        // adjust the real vertices of the mesh
+                        mesh.vpos[vert_0] = new_pos;
+                        swap(mesh.vpos[vert_1],mesh.vpos.back());
+                        mesh.vpos.pop_back();
+
+                        // in case that we just swapped vert_0, adjust it here (since we use it later on)
+                        if(vert_0 == mesh.verts.size()) vert_0 = vert_1;
+
+                        // move pointers from vert_1 to vert_0
+                        Halfedge* current = halfedge_A->next;
+                        while( current != halfedge_B) {
+                            current->vert = vert_0;
+                            current = current->twin->next;
+                        }
+
+                        // make sure that the edges of triangle A and B that WEREN'T removed, 
+                        // will still have a valid halfedge pointer
+                        mesh.edges[halfedge_A->next->next->edge] = halfedge_A->next->next->twin;
+                        mesh.edges[halfedge_B->next->edge] = halfedge_B->next->twin;
+
+                        // now handle twins (before we destroy structure)
+                        halfedge_A->next->next->twin->twin = halfedge_A->next->twin;
+                        halfedge_A->next->twin->twin = halfedge_A->next->next->twin;
+                        halfedge_A->next->twin->edge = halfedge_A->next->next->edge;
+
+                        halfedge_B->next->next->twin->twin = halfedge_B->next->twin;
+                        halfedge_B->next->twin->twin = halfedge_B->next->next->twin;
+                        halfedge_B->next->next->twin->edge = halfedge_B->next->edge;
+
+                        // finally remove the halfedges
+
+                        delete halfedge_A->next->next;
+                        delete halfedge_A->next;
+                        delete halfedge_A;
+
+                        delete halfedge_B->next->next;
+                        delete halfedge_B->next;
+                        delete halfedge_B;
+
+                        // adjust lengths
+
+                        Halfedge* half_0 = mesh.verts[vert_0];
+                        current = half_0;
+                        do {
+                            lengths[current->edge] = (mesh.vpos[current->next->vert]-mesh.vpos[current->vert]).norm2();
+                            current = current->twin->next;
+                        } while( current != half_0);
+
+                        
+                        k = 0;
+
+                    }
                 }
             }
         }
@@ -623,161 +639,166 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
         Halfedge* halfedge_A = mesh.edges[k];
         Halfedge* halfedge_B = halfedge_A->twin;
 
-        real curv_0 = curvature[halfedge_A->vert];
-        real curv_1 = curvature[halfedge_B->vert];
+        if(halfedge_A == halfedge_B) {
 
-        real L_min_2 = 0.0;
-        bool zero_curv = false;
-        if(curv_0+curv_1 != 0.0) {
-            L_min_2 = multiplicator*2.0/(curv_0+curv_1);
-            L_min_2 = L_min_2*L_min_2;
-        }
+        } else {
 
-        if(lengths[k] < L_min_2 or zero_curv) {
+            real curv_0 = curvature[halfedge_A->vert];
+            real curv_1 = curvature[halfedge_B->vert];
 
-            Halfedge* halfedge_A = mesh.edges[k];
-            Halfedge* halfedge_B = halfedge_A->twin;
+            real L_min_2 = 0.0;
+            bool zero_curv = false;
+            if(curv_0+curv_1 != 0.0) {
+                L_min_2 = multiplicator*2.0/(curv_0+curv_1);
+                L_min_2 = L_min_2*L_min_2;
+            }
 
-            size_t vert_0 = halfedge_A->vert;
-            size_t vert_1 = halfedge_B->vert;
+            if(lengths[k] < L_min_2 or zero_curv) {
 
-            size_t vert_A = halfedge_A->next->next->vert;
-            size_t vert_B = halfedge_B->next->next->vert;
+                Halfedge* halfedge_A = mesh.edges[k];
+                Halfedge* halfedge_B = halfedge_A->twin;
 
-            size_t num_paths(0);
+                size_t vert_0 = halfedge_A->vert;
+                size_t vert_1 = halfedge_B->vert;
 
-            Halfedge* finder = mesh.verts[vert_0];
-            Halfedge* init = finder;
-            do {
-                Halfedge* second = finder->next;
-                Halfedge* second_init = second;
+                size_t vert_A = halfedge_A->next->next->vert;
+                size_t vert_B = halfedge_B->next->next->vert;
+
+                size_t num_paths(0);
+
+                Halfedge* finder = mesh.verts[vert_0];
+                Halfedge* init = finder;
                 do {
-                    if(second->next->vert == vert_1) {
-                        num_paths++;
-                    }
-                    second = second->twin->next;
-                } while(second != second_init);
-
-                finder = finder->twin->next;
-            } while(finder != init);
-
-
-            if(num_paths == 2) {
-
-                vec3 new_pos(0.5*(mesh.vpos[vert_0] + mesh.vpos[vert_1]));
-                vec3 old_pos(mesh.vpos[vert_1]);
-
-                bool valid = true;
-
-                double limit_value = 0.8;
-
-                Halfedge* u(halfedge_A->next->twin);
-                do {
-                    if(u == halfedge_B->next->next) {
-                        u = halfedge_B->next->twin;
-                        old_pos = mesh.vpos[vert_0];
-                    }
-                    vec3 a = mesh.vpos[u->vert] - mesh.vpos[u->next->next->vert];
-                    vec3 b = mesh.vpos[u->next->next->vert] - new_pos;
-                    vec3 c = mesh.vpos[u->next->next->vert] - old_pos;
-
-                    c = c.vec(a);
-                    c.normalize();
-                    b = b.vec(a);
-                    b.normalize();
-
-                    if(b.dot(c)<limit_value) valid = false;
-                    u = u->next->twin;
-
-                } while(valid and u != halfedge_A->next->next);
-
-
-                if(valid) {
-
-                    // remove the elements
-
-                    // remove the three edges
-                    remove_edge(mesh.edges,halfedge_A->next->edge);
-                    remove_edge(mesh.edges,halfedge_B->next->next->edge);
-                    remove_edge(mesh.edges,halfedge_A->edge);
-
-                    swap(lengths[halfedge_A->next->edge],lengths.back());
-                    lengths.pop_back();
-                    swap(lengths[halfedge_B->next->next->edge],lengths.back());
-                    lengths.pop_back();
-                    swap(lengths[halfedge_A->edge],lengths.back());
-                    lengths.pop_back();
-
-
-                    // remove the two faces
-                    remove_face(mesh.trigs,halfedge_A->trig);
-                    remove_face(mesh.trigs,halfedge_B->trig);
-
-
-                    // make sure that vert_0 has an halfedge index that wont be removed
-                    // the same for vert_A and vert_B
-                    mesh.verts[vert_0] = halfedge_A->next->next->twin;
-                    mesh.verts[vert_A] = halfedge_A->next->twin;
-                    mesh.verts[vert_B] = halfedge_B->next->twin;
-
-                    remove_vertex(mesh.verts,vert_1);
-
-                    // adjust the real vertices of the mesh
-                    mesh.vpos[vert_0] = new_pos;
-                    swap(mesh.vpos[vert_1],mesh.vpos.back());
-                    mesh.vpos.pop_back();
-
-                    // and the curvature values
-                    curvature[vert_0] = 0.5*(curv_0+curv_1);
-                    swap(curvature[vert_1],curvature.back());
-                    curvature.pop_back();
-
-                    // in case that we just swapped vert_0, adjust it here (since we use it later on)
-                    if(vert_0 == mesh.verts.size()) vert_0 = vert_1;
-
-                    // move pointers from vert_1 to vert_0
-                    Halfedge* current = halfedge_A->next;
-                    while( current != halfedge_B) {
-                        current->vert = vert_0;
-                        current = current->twin->next;
-                    }
-
-                    // make sure that the edges of triangle A and B that WEREN'T removed, 
-                    // will still have a valid halfedge pointer
-                    mesh.edges[halfedge_A->next->next->edge] = halfedge_A->next->next->twin;
-                    mesh.edges[halfedge_B->next->edge] = halfedge_B->next->twin;
-
-                    // now handle twins (before we destroy structure)
-                    halfedge_A->next->next->twin->twin = halfedge_A->next->twin;
-                    halfedge_A->next->twin->twin = halfedge_A->next->next->twin;
-                    halfedge_A->next->twin->edge = halfedge_A->next->next->edge;
-
-                    halfedge_B->next->next->twin->twin = halfedge_B->next->twin;
-                    halfedge_B->next->twin->twin = halfedge_B->next->next->twin;
-                    halfedge_B->next->next->twin->edge = halfedge_B->next->edge;
-
-                    // finally remove the halfedges
-
-                    delete halfedge_A->next->next;
-                    delete halfedge_A->next;
-                    delete halfedge_A;
-
-                    delete halfedge_B->next->next;
-                    delete halfedge_B->next;
-                    delete halfedge_B;
-
-                    // adjust lengths
-
-                    Halfedge* half_0 = mesh.verts[vert_0];
-                    current = half_0;
+                    Halfedge* second = finder->next;
+                    Halfedge* second_init = second;
                     do {
-                        lengths[current->edge] = (mesh.vpos[current->next->vert]-mesh.vpos[current->vert]).norm2();
-                        current = current->twin->next;
-                    } while( current != half_0);
+                        if(second->next->vert == vert_1) {
+                            num_paths++;
+                        }
+                        second = second->twin->next;
+                    } while(second != second_init);
 
-                    
-                    k = 0;
+                    finder = finder->twin->next;
+                } while(finder != init);
 
+
+                if(num_paths == 2) {
+
+                    vec3 new_pos(0.5*(mesh.vpos[vert_0] + mesh.vpos[vert_1]));
+                    vec3 old_pos(mesh.vpos[vert_1]);
+
+                    bool valid = true;
+
+                    double limit_value = 0.8;
+
+                    Halfedge* u(halfedge_A->next->twin);
+                    do {
+                        if(u == halfedge_B->next->next) {
+                            u = halfedge_B->next->twin;
+                            old_pos = mesh.vpos[vert_0];
+                        }
+                        vec3 a = mesh.vpos[u->vert] - mesh.vpos[u->next->next->vert];
+                        vec3 b = mesh.vpos[u->next->next->vert] - new_pos;
+                        vec3 c = mesh.vpos[u->next->next->vert] - old_pos;
+
+                        c = c.vec(a);
+                        c.normalize();
+                        b = b.vec(a);
+                        b.normalize();
+
+                        if(b.dot(c)<limit_value) valid = false;
+                        u = u->next->twin;
+
+                    } while(valid and u != halfedge_A->next->next);
+
+
+                    if(valid) {
+
+                        // remove the elements
+
+                        // remove the three edges
+                        remove_edge(mesh.edges,halfedge_A->next->edge);
+                        remove_edge(mesh.edges,halfedge_B->next->next->edge);
+                        remove_edge(mesh.edges,halfedge_A->edge);
+
+                        swap(lengths[halfedge_A->next->edge],lengths.back());
+                        lengths.pop_back();
+                        swap(lengths[halfedge_B->next->next->edge],lengths.back());
+                        lengths.pop_back();
+                        swap(lengths[halfedge_A->edge],lengths.back());
+                        lengths.pop_back();
+
+
+                        // remove the two faces
+                        remove_face(mesh.trigs,halfedge_A->trig);
+                        remove_face(mesh.trigs,halfedge_B->trig);
+
+
+                        // make sure that vert_0 has an halfedge index that wont be removed
+                        // the same for vert_A and vert_B
+                        mesh.verts[vert_0] = halfedge_A->next->next->twin;
+                        mesh.verts[vert_A] = halfedge_A->next->twin;
+                        mesh.verts[vert_B] = halfedge_B->next->twin;
+
+                        remove_vertex(mesh.verts,vert_1);
+
+                        // adjust the real vertices of the mesh
+                        mesh.vpos[vert_0] = new_pos;
+                        swap(mesh.vpos[vert_1],mesh.vpos.back());
+                        mesh.vpos.pop_back();
+
+                        // and the curvature values
+                        curvature[vert_0] = 0.5*(curv_0+curv_1);
+                        swap(curvature[vert_1],curvature.back());
+                        curvature.pop_back();
+
+                        // in case that we just swapped vert_0, adjust it here (since we use it later on)
+                        if(vert_0 == mesh.verts.size()) vert_0 = vert_1;
+
+                        // move pointers from vert_1 to vert_0
+                        Halfedge* current = halfedge_A->next;
+                        while( current != halfedge_B) {
+                            current->vert = vert_0;
+                            current = current->twin->next;
+                        }
+
+                        // make sure that the edges of triangle A and B that WEREN'T removed, 
+                        // will still have a valid halfedge pointer
+                        mesh.edges[halfedge_A->next->next->edge] = halfedge_A->next->next->twin;
+                        mesh.edges[halfedge_B->next->edge] = halfedge_B->next->twin;
+
+                        // now handle twins (before we destroy structure)
+                        halfedge_A->next->next->twin->twin = halfedge_A->next->twin;
+                        halfedge_A->next->twin->twin = halfedge_A->next->next->twin;
+                        halfedge_A->next->twin->edge = halfedge_A->next->next->edge;
+
+                        halfedge_B->next->next->twin->twin = halfedge_B->next->twin;
+                        halfedge_B->next->twin->twin = halfedge_B->next->next->twin;
+                        halfedge_B->next->next->twin->edge = halfedge_B->next->edge;
+
+                        // finally remove the halfedges
+
+                        delete halfedge_A->next->next;
+                        delete halfedge_A->next;
+                        delete halfedge_A;
+
+                        delete halfedge_B->next->next;
+                        delete halfedge_B->next;
+                        delete halfedge_B;
+
+                        // adjust lengths
+
+                        Halfedge* half_0 = mesh.verts[vert_0];
+                        current = half_0;
+                        do {
+                            lengths[current->edge] = (mesh.vpos[current->next->vert]-mesh.vpos[current->vert]).norm2();
+                            current = current->twin->next;
+                        } while( current != half_0);
+
+                        
+                        k = 0;
+
+                    }
                 }
             }
         }
@@ -832,98 +853,101 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
 
         Halfedge* halfedge_B = halfedge_A->twin;
 
-        size_t vert_0 = halfedge_A->vert;
-        size_t vert_1 = halfedge_B->vert;
+        if(halfedge_A == halfedge_B) {
 
-        size_t vert_A = halfedge_A->next->next->vert;
-        size_t vert_B = halfedge_B->next->next->vert;
-        
+        } else {
 
-        // if valences are <=3, one must not reduce them further, otherwise
-        // the mesh becomes invalid.
-        if(valences[vert_0] > 3 and valences[vert_1] > 3) {
+            size_t vert_0 = halfedge_A->vert;
+            size_t vert_1 = halfedge_B->vert;
 
-            int cost = 0;
-            int cost_flip = 0;
+            size_t vert_A = halfedge_A->next->next->vert;
+            size_t vert_B = halfedge_B->next->next->vert;
+            
 
-            cost += valence_cost(valences[vert_0]);
-            cost += valence_cost(valences[vert_1]);
-            cost += valence_cost(valences[vert_A]);
-            cost += valence_cost(valences[vert_B]);
+            // if valences are <=3, one must not reduce them further, otherwise
+            // the mesh becomes invalid.
+            if(valences[vert_0] > 3 and valences[vert_1] > 3) {
 
-            cost_flip += valence_cost(valences[vert_0]-1); // it is safe to subtract one here
-            cost_flip += valence_cost(valences[vert_1]-1);
-            cost_flip += valence_cost(valences[vert_A]+1);
-            cost_flip += valence_cost(valences[vert_B]+1);
+                int cost = 0;
+                int cost_flip = 0;
+
+                cost += valence_cost(valences[vert_0]);
+                cost += valence_cost(valences[vert_1]);
+                cost += valence_cost(valences[vert_A]);
+                cost += valence_cost(valences[vert_B]);
+
+                cost_flip += valence_cost(valences[vert_0]-1); // it is safe to subtract one here
+                cost_flip += valence_cost(valences[vert_1]-1);
+                cost_flip += valence_cost(valences[vert_A]+1);
+                cost_flip += valence_cost(valences[vert_B]+1);
 
 
-            // check new and old lengths:
-            real length      = (mesh.vpos[vert_1] - mesh.vpos[vert_0]).norm2();
-            real length_flip = (mesh.vpos[vert_A] - mesh.vpos[vert_B]).norm2();
+                // check new and old lengths:
+                real length      = (mesh.vpos[vert_1] - mesh.vpos[vert_0]).norm2();
+                real length_flip = (mesh.vpos[vert_A] - mesh.vpos[vert_B]).norm2();
 
-            // It woule be possible too, to test the delaunay condition or other
-            // shape quality proxys for triangles
+                // It woule be possible too, to test the delaunay condition or other
+                // shape quality proxys for triangles
 
-            // test wether triangles are sufficiently similarly oriented
-            vec3 nA = cross_vec(mesh.vpos[vert_0],mesh.vpos[vert_B],mesh.vpos[vert_A]);
-            nA.normalize();
-            vec3 nB = cross_vec(mesh.vpos[vert_B],mesh.vpos[vert_1],mesh.vpos[vert_A]);
-            nB.normalize();
-            real dotprod = nA.dot(nB);
+                // test wether triangles are sufficiently similarly oriented
+                vec3 nA = cross_vec(mesh.vpos[vert_0],mesh.vpos[vert_B],mesh.vpos[vert_A]);
+                nA.normalize();
+                vec3 nB = cross_vec(mesh.vpos[vert_B],mesh.vpos[vert_1],mesh.vpos[vert_A]);
+                nB.normalize();
+                real dotprod = nA.dot(nB);
 
-            // condition whether or not to flip. Note that the variable state decides which criterion
-            // will be applied
-            bool flip = (state > 0 and cost_flip < cost) or (state == 0 and length_flip < length);
+                // condition whether or not to flip. Note that the variable state decides which criterion
+                // will be applied
+                bool flip = (state > 0 and cost_flip < cost) or (state == 0 and length_flip < length);
 
-            // that the dotprod is larger than 0.8 is a necessary condition for flipping. The number 0.8 
-            // was estimated through trials.
-            if(flip and dotprod > 0.8) {
-                valences[vert_0]--;
-                valences[vert_1]--;
-                valences[vert_A]++;
-                valences[vert_B]++;
+                // that the dotprod is larger than 0.8 is a necessary condition for flipping. The number 0.8 
+                // was estimated through trials.
+                if(flip and dotprod > 0.8) {
+                    valences[vert_0]--;
+                    valences[vert_1]--;
+                    valences[vert_A]++;
+                    valences[vert_B]++;
 
-                // make sure that the vertices 0 and 1 have valid pointers
+                    // make sure that the vertices 0 and 1 have valid pointers
 
-                mesh.verts[vert_0] = halfedge_B->next;
-                mesh.verts[vert_1] = halfedge_A->next;
+                    mesh.verts[vert_0] = halfedge_B->next;
+                    mesh.verts[vert_1] = halfedge_A->next;
 
-                // make sure that the triangles A and B have valid pointers
+                    // make sure that the triangles A and B have valid pointers
 
-                mesh.trigs[halfedge_A->trig] = halfedge_A;
-                mesh.trigs[halfedge_B->trig] = halfedge_B;
+                    mesh.trigs[halfedge_A->trig] = halfedge_A;
+                    mesh.trigs[halfedge_B->trig] = halfedge_B;
 
-                // flip the edge!
+                    // flip the edge!
 
-                // changing the parameters of halfedge_A/B->next->next
+                    // changing the parameters of halfedge_A/B->next->next
 
-                Halfedge* temp_A = halfedge_A->next->next;
-                Halfedge* temp_B = halfedge_B->next->next;
+                    Halfedge* temp_A = halfedge_A->next->next;
+                    Halfedge* temp_B = halfedge_B->next->next;
 
-                temp_A->next = halfedge_B->next;
-                temp_B->next = halfedge_A->next;
+                    temp_A->next = halfedge_B->next;
+                    temp_B->next = halfedge_A->next;
 
-                // changing the parameters of halfedge_A/B->next
+                    // changing the parameters of halfedge_A/B->next
 
-                halfedge_A->next->next = halfedge_B;
-                halfedge_A->next->trig = halfedge_B->trig;
+                    halfedge_A->next->next = halfedge_B;
+                    halfedge_A->next->trig = halfedge_B->trig;
 
-                halfedge_B->next->next = halfedge_A;
-                halfedge_B->next->trig = halfedge_A->trig;
+                    halfedge_B->next->next = halfedge_A;
+                    halfedge_B->next->trig = halfedge_A->trig;
 
-                // changing the parameters of halfedge_A/B
+                    // changing the parameters of halfedge_A/B
 
-                halfedge_A->vert = temp_B->vert;
-                halfedge_B->vert = temp_A->vert;
+                    halfedge_A->vert = temp_B->vert;
+                    halfedge_B->vert = temp_A->vert;
 
-                halfedge_A->next = temp_A;
-                halfedge_B->next = temp_B;
+                    halfedge_A->next = temp_A;
+                    halfedge_B->next = temp_B;
 
-                num_flipped++;
+                    num_flipped++;
+                }
             }
-
         } 
-        
     }
 #ifdef VERBOSE
     cout << "flipped " << num_flipped << " edges." << endl;
