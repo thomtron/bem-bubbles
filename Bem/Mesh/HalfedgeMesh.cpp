@@ -2,6 +2,7 @@
 #include "Tuplet.hpp"
 
 #include <vector>
+#include <list>
 #include <algorithm> // for sort()
 #include <numeric>   // for iota()
 
@@ -199,12 +200,16 @@ HalfedgeMesh generate_halfedges(Mesh const& mesh) {
 void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
     result.release();
     // output arrays
+
+    vector<Vertex> verts;
+    
     for(vec3 const& vec : mesh.verts) {
-        result.verts.push_back({nullptr,vec});
+        verts.push_back({nullptr,vec,0});
     }
 
-    result.trigs = vector<Halfedge*>(mesh.trigs.size());
+    //result.trigs = vector<Halfedge*>(mesh.trigs.size());
 
+    
     vector<Tuplet> edges;
     vector<Halfedge*> edge_halfs;
 
@@ -217,27 +222,29 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
 
         // here all relations between faces,vertices and halfedges are created
 
-        result.trigs[i] = A;
+        //result.trigs[i] = A;
+        result.trigs.push_back(A);
 
-        result.verts[t.a].half = A; // these are overwritten multiple times in this loop
-        result.verts[t.b].half = B;
-        result.verts[t.c].half = C;
+        //result.verts[t.a].half = A; // these are overwritten multiple times in this loop
+        //result.verts[t.b].half = B;
+        //result.verts[t.c].half = C;
+
+        verts[t.a].half = A; // these are overwritten multiple times in this loop
+        verts[t.b].half = B;
+        verts[t.c].half = C;
 
         A->next = B;
-        A->vert = &result.verts[t.a];
-        A->trig = &result.trigs[i];
+        A->trig = &result.trigs.back();
         A->edge = nullptr;
         A->twin = nullptr;
 
         B->next = C;
-        B->vert = &result.verts[t.b];
-        B->trig = &result.trigs[i];
+        B->trig = &result.trigs.back();
         B->edge = nullptr;
         B->twin = nullptr;
 
         C->next = A;
-        C->vert = &result.verts[t.c];
-        C->trig = &result.trigs[i];
+        C->trig = &result.trigs.back();
         C->edge = nullptr;
         C->twin = nullptr;
 
@@ -266,7 +273,7 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
             // indices are identical. In the other case, the edge was pushed back only
             // once and therefore we have a boundary edge, the case treated here:
 
-            size_t ind = edge_inds[i];
+            size_t ind  = edge_inds[i];
             Halfedge* A = edge_halfs[ind];
 
             result.edges.push_back(A);
@@ -290,41 +297,65 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
 
             result.edges.push_back(A);
 
+            
             A->edge = &result.edges.back();
             B->edge = &result.edges.back();
 
-        }
+            //Halfedge** h = result.edges[0]->edge;
 
+            //cout << A->edge << " - " << h << endl;
+
+            //cout << result.get_index(result.edges,h) << ' ';// << endl;
+
+
+        }
     }
 
-    for(Vertex const& elm : result.verts) {
+
+    result.verts = list<Vertex>(verts.begin(),verts.end());
+    
+    for(Vertex& elm : result.verts) {
         Halfedge* u(elm.half);
         Halfedge* first_boundary(nullptr);
         Halfedge* last_boundary(nullptr);
+
+        u = u->twin->next;
+        //size_t k(0);
         while(u != elm.half) {
             if(u == u->twin) { // handle boundary edges! (add corresponding halfedges)
+                //cout << "  > edge-piece nr. " << k++ << endl;
                 Halfedge* B = new Halfedge;
                 B->twin = u;
                 B->trig = nullptr;
                 B->next = last_boundary;
                 B->edge = u->edge;
-                last_boundary = B;
-                u = u->next;
-                B->vert = u->vert;
-                u->twin = B;
 
+                u->twin = B;
+                u = u->next;
+
+                last_boundary = B;
                 if(first_boundary == nullptr) first_boundary = B;
 
             } else {
-                u = u->twin;
-                u = u->next;
-            }
-
-            if(first_boundary != nullptr) {
-                first_boundary->next = last_boundary;
+                u = u->twin->next;
             }
         }
+        if(first_boundary != nullptr) {
+            first_boundary->next = last_boundary;
+        }
     }
+
+    for(Vertex& elm : result.verts) {
+        Halfedge* u(elm.half);
+        u->vert = &elm;
+        u = u->twin->next;
+        while(u != elm.half) {
+            u->vert = &elm;
+            u = u->twin->next;
+        }
+    }
+
+    result.update_vertex_indices();
 }
 
 Mesh generate_mesh(HalfedgeMesh const& mesh) {
@@ -334,6 +365,7 @@ Mesh generate_mesh(HalfedgeMesh const& mesh) {
 }
 
 void generate_mesh(Mesh& result, HalfedgeMesh const& mesh) {
+
     for(Vertex const& elm : mesh.verts)
         result.verts.push_back(elm.pos);
 
@@ -344,11 +376,19 @@ void generate_mesh(Mesh& result, HalfedgeMesh const& mesh) {
         //auto index = (elm->vert - &mesh.verts[0])/sizeof(Vertex); // mesh.verts.begin() + 
         //auto index = distance(mesh.verts.begin(),vector<Vertex>::iterator(&mesh.verts[7])); //vector<const Vertex>::iterator(elm->vert));
 
-        t.a = mesh.get_index(mesh.verts,elm->vert);
-        t.b = mesh.get_index(mesh.verts,elm->next->vert);
-        t.c = mesh.get_index(mesh.verts,elm->next->next->vert);
+        t.a = elm->vert->index;
+        t.b = elm->next->vert->index;
+        t.c = elm->next->next->vert->index;
 
         result.trigs.push_back(t);
+    }
+}
+
+void HalfedgeMesh::update_vertex_indices() {
+    size_t i(0);
+    for(Vertex& elm : verts) {
+        elm.index = i;
+        i++;
     }
 }
 

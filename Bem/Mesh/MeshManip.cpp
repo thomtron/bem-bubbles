@@ -41,14 +41,15 @@ void check_validity(HalfedgeMesh const& mesh) {
             if(elm->trig == nullptr) cout << "elm->trig is nullptr" << endl;
             if(elm->twin->trig == nullptr) cout << "elm->twin->trig is nullptr" << endl;
             if(elm->edge == nullptr) cout << "nullptr" << endl;
-            cout << mesh.get_index(mesh.edges,&elm) << " -%- " << mesh.get_index(mesh.edges,elm->edge)<< endl;
+            //cout << mesh.get_index(mesh.edges,&elm) << " -%- " << mesh.get_index(mesh.edges,elm->edge)<< endl;
             
         }
     }
 
+    /*
     // the following 18 lines are for checking that the valence number computed by two different methods are consistent
     vector<size_t> valences(mesh.verts.size(),0);
-
+    
     for(Halfedge* elm : mesh.trigs) {
         valences[mesh.get_index(mesh.verts,elm->vert)]++;
         valences[mesh.get_index(mesh.verts,elm->next->vert)]++;
@@ -65,10 +66,10 @@ void check_validity(HalfedgeMesh const& mesh) {
             u = u->twin->next;
         } while(u != half);
         if(valence != valences[mesh.get_index(mesh.verts,half->vert)]) {
-                error_valence++; //cout << "v-e: " << valence << ", exp: " << valences[elm->vert] << endl; //error_valence++;
-                //cout << int(valence) - int(valences[mesh.get_index(mesh.verts,half->vert)]) << endl;
-            } 
-        }
+            error_valence++; //cout << "v-e: " << valence << ", exp: " << valences[elm->vert] << endl; //error_valence++;
+            //cout << int(valence) - int(valences[mesh.get_index(mesh.verts,half->vert)]) << endl;
+        } 
+    }*/
 
     // print found errors and their occurence
 
@@ -101,7 +102,7 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
     cout << "SPLIT-EDGES" << endl;
     size_t num_t_init = mesh.trigs.size();
 #endif
-    
+    /*
     // we work with square lengths since we only compare lengths qualitatively and 
     // the computation of the square root can be prevented like that.
     vector<real> lengths;
@@ -131,7 +132,7 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
         
     }
 
-    /*
+    
 
     // we want to check each edge only once
     // (the newly generated edges will be appended at the end and we won't check them in this pass)
@@ -144,17 +145,21 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
             Halfedge* edge01(mesh.edges[i]);
             Halfedge* edge10(edge01->twin);
 
-            if(edge01->trig == nullptr or edge10->trig == nullptr) {
+            if(edge01->trig == nullptr or edge10->trig == nullptr) { // if at edge
                 // a remplir
             } else {
 
-                mesh.vpos.push_back(0.5*(edge01->vert->pos+edge01->next->vert->pos));
-                mesh.verts.push_back(edge10);
+                //mesh.vpos.push_back(0.5*(edge01->vert->pos+edge01->next->vert->pos));
+                //mesh.verts.push_back(edge10);
+
+                mesh.verts.push_back({edge10,0.5*(edge01->vert->pos+edge01->next->vert->pos)});
                 size_t new_index(mesh.verts.size()-1);
+
+                Halfedge** new_vert() // damit, push_back invalidates again pointers!
 
                 // S for straight, A, B for the two sides 
                 // _0 are Halfedges going out from new_index
-                size_t K(mesh.edges.size());nullptr
+                size_t K(mesh.edges.size());
                 size_t M(mesh.trigs.size());
                 Halfedge* S_0 = new Halfedge;
                 Halfedge* S_1 = new Halfedge;
@@ -210,8 +215,8 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
                 edge10->vert = new_index;
 
                 mesh.verts[S_1->vert] = S_1;
-                mesh.trigs[edge01->trig] = edge01;
-                mesh.trigs[edge10->trig] = edge10;
+                edge01->trig = &edge01;
+                edge10->trig = &edge10;
 
 
                 mesh.trigs.push_back(S_0);

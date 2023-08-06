@@ -2,7 +2,7 @@
 #define HALFEDGEMESH_HPP
 
 #include <iostream>
-#include <vector>
+#include <list>
 
 #include "Mesh.hpp"
 
@@ -36,24 +36,27 @@ struct Halfedge {
 struct Vertex {
     Halfedge* half;
     vec3 pos;
+    size_t index;
 };
 
 struct HalfedgeMesh {
-    std::vector<Vertex>   verts;
-    std::vector<Halfedge*> trigs;
-    std::vector<Halfedge*> edges;
-    std::vector<Halfedge*> bounds;
+    std::list<Vertex>    verts;
+    std::list<Halfedge*> trigs;
+    std::list<Halfedge*> edges;
+    std::list<Halfedge*> bounds;
 
     ~HalfedgeMesh();
 
     void release();
 
+    /*
     template<typename T>
     size_t get_index(std::vector<T> const& vec, const T* elm) const {
         size_t index = elm - &vec[0]; // internet says: ()/sizeof(T), but that didn't give correct results...
+        //std::cout << elm << " + " << &vec[0] << " + " << index << std::endl;
         if(index >= vec.size()) throw(std::out_of_range("Bad Vertex pointer: out of range of Vertex vector."));
         return index;
-    }
+    }*/
     
     HalfedgeMesh(Mesh const& other);
     HalfedgeMesh(HalfedgeMesh&&) = default;
@@ -63,6 +66,8 @@ struct HalfedgeMesh {
     HalfedgeMesh& operator=(HalfedgeMesh&&) = default;
     
     void copy(HalfedgeMesh const& other);
+
+    void update_vertex_indices();
 };
 
 HalfedgeMesh generate_halfedges(Mesh const& mesh);

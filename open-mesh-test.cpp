@@ -13,14 +13,17 @@ int main() {
     Mesh M;
     import_ply("semi-sphere.ply",M);
 
-    HalfedgeMesh half(generate_halfedges(M));
+    HalfedgeMesh half; //(generate_halfedges(M));
 
+    generate_halfedges(half,M);
+
+    /*
     Halfedge** f = half.trigs.back()->trig;
     cout << half.get_index(half.trigs,f) << endl << endl;
 
-    Halfedge** h = half.edges[134]->edge;
+    Halfedge** h = half.edges[1000]->edge;
     cout << half.get_index(half.edges,h) << endl << endl;
-
+    */
     
 
     Bem::real L(0.1);
