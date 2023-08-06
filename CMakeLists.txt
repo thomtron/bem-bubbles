@@ -31,6 +31,9 @@ target_link_libraries(color mesh)
 add_executable(pinned-bubble pinned-bubble.cpp)
 target_link_libraries(pinned-bubble simulation integration mesh)
 
+add_executable(open-mesh-test open-mesh-test.cpp)
+target_link_libraries(open-mesh-test integration mesh)
+
 add_executable(wall more-examples/wall.cpp)
 target_link_libraries(wall simulation integration mesh)
 

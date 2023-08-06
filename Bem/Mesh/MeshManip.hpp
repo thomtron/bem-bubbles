@@ -30,6 +30,8 @@ Mesh l2smooth(Mesh mesh, std::vector<size_t> const& vert_inds);
 Mesh l2smooth(Mesh mesh, std::vector<real>& pot);
 Mesh l2smooth(Mesh mesh, std::vector<real>& pot, std::vector<size_t> const& vert_inds);
 
+void check_validity(HalfedgeMesh const& mesh);
+
 } // namespace Bem
 
 #endif // MESHMANIP_HPP

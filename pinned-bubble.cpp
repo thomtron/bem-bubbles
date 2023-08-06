@@ -67,9 +67,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 50e-6; // m
-    Bem::real pressure = 8e4; // Pa
-    string folder = "pinned-bubble-res/";
+    Bem::real radius   = 70e-6; // m
+    Bem::real pressure = 15e4; // Pa
+    string folder = "pinned-bubble-res-15e4-70e-6-2x/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -77,7 +77,7 @@ int main() {
 
     // physical parameters in SI units
 
-    Bem::real p_infty = 101325.0; // N/m^2  ambient pressure                     Note: 101325.0 Pa = 1 atm by definition (see wikipedia)
+    Bem::real p_infty = 2*101325.0; // N/m^2  ambient pressure                     Note: 101325.0 Pa = 1 atm by definition (see wikipedia)
     Bem::real sigma = 0.07275;    // N/m    surface tension                      @ 20°C https://de.wikipedia.org/wiki/Oberfl%C3%A4chenspannung
     Bem::real r0 = radius;        // m      initial radius = reference length    from Versluis_2010
     Bem::real c = 1481.0;         // m/s    sound speed of water                 @ 20°C https://en.wikipedia.org/wiki/Speed_of_sound  -  no good source...
@@ -117,7 +117,7 @@ int main() {
     
     
     Bem::real dp = 0.005;
-    size_t N(1000);
+    size_t N(2000);
     
     ColocSimPin sim(M,npin,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
@@ -138,7 +138,7 @@ int main() {
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
 
-        if(i%10 == 0) sim.remesh(0.2);
+        //if(i%10 == 0) sim.remesh(0.2);
 
         if(i%10 == 0){
             vector<size_t> inds(sim.mesh.verts.size() - npin);

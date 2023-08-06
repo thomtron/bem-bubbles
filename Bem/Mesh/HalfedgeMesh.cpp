@@ -10,19 +10,32 @@ using namespace std;
 namespace Bem {
 
 HalfedgeMesh::~HalfedgeMesh() {
+    release();
+}
+
+void HalfedgeMesh::release() {
     for(Halfedge* elm : trigs) {
         delete elm->next->next;
         delete elm->next;
         delete elm;
     }
-    vpos.clear();
+    for(Halfedge* elm : bounds) {
+        Halfedge* u(elm->next);
+        while(u != elm) {
+            Halfedge* tmp = u->next;
+            delete u;
+            u = tmp;
+        }
+        delete elm;
+    }
     verts.clear();
     edges.clear();
     trigs.clear();
+    bounds.clear();
 }
 
-HalfedgeMesh::HalfedgeMesh(Mesh const& other) 
-    :HalfedgeMesh(generate_halfedges(other)) {
+HalfedgeMesh::HalfedgeMesh(Mesh const& other){
+    generate_halfedges(*this,other);
 }
 
 HalfedgeMesh::HalfedgeMesh(HalfedgeMesh const& other) {
@@ -33,47 +46,31 @@ HalfedgeMesh& HalfedgeMesh::operator=(HalfedgeMesh const& other) {
     return *this;
 }
 
-void HalfedgeMesh::copy(HalfedgeMesh const& other) {
+void HalfedgeMesh::copy(HalfedgeMesh const& other) { // can be optimized very probably
+
+    generate_halfedges(*this,generate_mesh(other));
+    /*
     cout << "making copy." << endl;
-    vpos = other.vpos;
-    verts = vector<Halfedge*>(other.verts.size(),nullptr);
-    edges = vector<Halfedge*>(other.edges.size(),nullptr);
-    trigs = vector<Halfedge*>(other.trigs.size(),nullptr);
+
     for(Halfedge* elm : other.edges) {
-        if(elm->twin == elm) { // if at boundary
-            Halfedge* A = new Halfedge;
+        Halfedge* A = new Halfedge;
+        Halfedge* B = new Halfedge;
 
-            A->vert = elm->vert;
-            A->edge = elm->edge;
-            A->trig = elm->trig;
-            A->twin = A;
+        edges.push_back(A);
 
-            verts[A->vert] = A;
-            edges[A->edge] = A;
-            trigs[A->trig] = A;
-        } else {
-            Halfedge* A = new Halfedge;
-            Halfedge* B = new Halfedge;
+        A->edge = &edges.back();
+        A->twin = B;
 
-            A->vert = elm->vert;
-            A->edge = elm->edge;
-            A->trig = elm->trig;
-            A->twin = B;
-
-            B->vert = elm->twin->vert;
-            B->edge = elm->twin->edge;
-            B->trig = elm->twin->trig;
-            B->twin = A;
-
-            verts[A->vert] = A;
-            edges[A->edge] = A;
-            trigs[A->trig] = A;
-
-            verts[B->vert] = B;
-            edges[B->edge] = B;
-            trigs[B->trig] = B; 
-        }
+        B->edge = &edges.back();
+        B->twin = A; 
     }
+    for(Vertex const& elm : other.verts) {
+        verts.push_back(elm);
+        Vertex* vert(&verts.back());
+        vert->half = 
+    }
+
+
     for(Halfedge* elm : other.trigs) {
         size_t trig_ind = elm->trig;
         Halfedge* A = edges[elm->edge];
@@ -87,8 +84,10 @@ void HalfedgeMesh::copy(HalfedgeMesh const& other) {
         B->next = C;
         C->next = A;
     }
+    */
 }
 
+/*
 HalfedgeMesh generate_halfedges(Mesh const& mesh) {
 
     HalfedgeMesh result;
@@ -189,15 +188,168 @@ HalfedgeMesh generate_halfedges(Mesh const& mesh) {
 
     return result;
 }
+*/
+
+HalfedgeMesh generate_halfedges(Mesh const& mesh) {
+    HalfedgeMesh result;
+    generate_halfedges(result,mesh);
+    return result;
+}
+
+void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
+    result.release();
+    // output arrays
+    for(vec3 const& vec : mesh.verts) {
+        result.verts.push_back({nullptr,vec});
+    }
+
+    result.trigs = vector<Halfedge*>(mesh.trigs.size());
+
+    vector<Tuplet> edges;
+    vector<Halfedge*> edge_halfs;
+
+    for(size_t i(0);i<mesh.trigs.size();++i) {
+        Triplet t(mesh.trigs[i]);
+
+        Halfedge* A = new Halfedge;
+        Halfedge* B = new Halfedge;
+        Halfedge* C = new Halfedge;
+
+        // here all relations between faces,vertices and halfedges are created
+
+        result.trigs[i] = A;
+
+        result.verts[t.a].half = A; // these are overwritten multiple times in this loop
+        result.verts[t.b].half = B;
+        result.verts[t.c].half = C;
+
+        A->next = B;
+        A->vert = &result.verts[t.a];
+        A->trig = &result.trigs[i];
+        A->edge = nullptr;
+        A->twin = nullptr;
+
+        B->next = C;
+        B->vert = &result.verts[t.b];
+        B->trig = &result.trigs[i];
+        B->edge = nullptr;
+        B->twin = nullptr;
+
+        C->next = A;
+        C->vert = &result.verts[t.c];
+        C->trig = &result.trigs[i];
+        C->edge = nullptr;
+        C->twin = nullptr;
+
+        // the "glue" between the triangles is given by the edges, for which 
+        // we have to generate a list using the Tuplet class
+
+        edges.push_back(Tuplet(t.a,t.b));
+        edges.push_back(Tuplet(t.b,t.c));
+        edges.push_back(Tuplet(t.c,t.a));
+
+        edge_halfs.push_back(A);
+        edge_halfs.push_back(B);
+        edge_halfs.push_back(C);
+    }
+
+    size_t K(edges.size());
+    vector<size_t> edge_inds(K);
+    iota(edge_inds.begin(),edge_inds.end(),0);
+    sort(edge_inds.begin(),edge_inds.end(),[&edges](size_t a,size_t b) { return edges[a] < edges[b]; });
+
+    for(size_t i(0);i<K;++i) {
+
+        if(i == K-1 or edges[edge_inds[i]]<edges[edge_inds[i+1]]) { 
+            // if the edge was pushed back two times (from two triangles), the edge is
+            // an interior edge. The present condition evaluates false, since the two 
+            // indices are identical. In the other case, the edge was pushed back only
+            // once and therefore we have a boundary edge, the case treated here:
+
+            size_t ind = edge_inds[i];
+            Halfedge* A = edge_halfs[ind];
+
+            result.edges.push_back(A);
+
+            A->twin = A;
+            A->edge = &result.edges.back();
+
+        } else {
+
+            size_t ind1 = edge_inds[i];
+            i++;
+            size_t ind2 = edge_inds[i];
+
+            Halfedge* A = edge_halfs[ind1];
+            Halfedge* B = edge_halfs[ind2];
+
+            // now we can add the final informations to the halfedges
+
+            A->twin = B;
+            B->twin = A;
+
+            result.edges.push_back(A);
+
+            A->edge = &result.edges.back();
+            B->edge = &result.edges.back();
+
+        }
+
+    }
+
+    for(Vertex const& elm : result.verts) {
+        Halfedge* u(elm.half);
+        Halfedge* first_boundary(nullptr);
+        Halfedge* last_boundary(nullptr);
+        while(u != elm.half) {
+            if(u == u->twin) { // handle boundary edges! (add corresponding halfedges)
+                Halfedge* B = new Halfedge;
+                B->twin = u;
+                B->trig = nullptr;
+                B->next = last_boundary;
+                B->edge = u->edge;
+                last_boundary = B;
+                u = u->next;
+                B->vert = u->vert;
+                u->twin = B;
+
+                if(first_boundary == nullptr) first_boundary = B;
+
+            } else {
+                u = u->twin;
+                u = u->next;
+            }
+
+            if(first_boundary != nullptr) {
+                first_boundary->next = last_boundary;
+            }
+        }
+    }
+}
 
 Mesh generate_mesh(HalfedgeMesh const& mesh) {
     Mesh result;
-    result.verts = mesh.vpos;
+    generate_mesh(result,mesh);
+    return result;
+}
+
+void generate_mesh(Mesh& result, HalfedgeMesh const& mesh) {
+    for(Vertex const& elm : mesh.verts)
+        result.verts.push_back(elm.pos);
+
     for(Halfedge* elm : mesh.trigs) {
-        Triplet t(elm->vert,elm->next->vert,elm->next->next->vert);
+        Triplet t;
+
+        //vector<Vertex>::iterator const& it(*(elm->vert));
+        //auto index = (elm->vert - &mesh.verts[0])/sizeof(Vertex); // mesh.verts.begin() + 
+        //auto index = distance(mesh.verts.begin(),vector<Vertex>::iterator(&mesh.verts[7])); //vector<const Vertex>::iterator(elm->vert));
+
+        t.a = mesh.get_index(mesh.verts,elm->vert);
+        t.b = mesh.get_index(mesh.verts,elm->next->vert);
+        t.c = mesh.get_index(mesh.verts,elm->next->next->vert);
+
         result.trigs.push_back(t);
     }
-    return result;
 }
 
 

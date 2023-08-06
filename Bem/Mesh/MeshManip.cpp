@@ -32,32 +32,43 @@ void check_validity(HalfedgeMesh const& mesh) {
         if(elm->next->trig != elm->trig) error_trigind++;       // check that halfedges point to same triangle
         if(elm->next->next->trig != elm->trig) error_trigind++; // -^
     }
-    for(Halfedge* elm : mesh.edges) {
-        if(elm->twin->twin != elm) error_tt++;                  // check that twin of twin is element itself
-        if(mesh.edges[elm->edge] != elm) error_edgeind++;       // check that edge indices are correct
-        if(mesh.edges[elm->twin->edge] != elm) error_edgeind++; // check that edge indices are correct
+    for(Halfedge* const& elm : mesh.edges) {
+        //cout << mesh.get_index(mesh.edges,&elm) << endl;
+        if(elm->twin->twin != elm) error_tt++;                   // check that twin of twin is element itself
+        if(elm->edge != elm->twin->edge) error_edgeind++;        // check that edge indices are correct
+        if(*(elm->edge) != elm and *(elm->edge) != elm->twin) {
+            error_edgeind++; // check that edge indices are correct
+            if(elm->trig == nullptr) cout << "elm->trig is nullptr" << endl;
+            if(elm->twin->trig == nullptr) cout << "elm->twin->trig is nullptr" << endl;
+            if(elm->edge == nullptr) cout << "nullptr" << endl;
+            cout << mesh.get_index(mesh.edges,&elm) << " -%- " << mesh.get_index(mesh.edges,elm->edge)<< endl;
+            
+        }
     }
-
 
     // the following 18 lines are for checking that the valence number computed by two different methods are consistent
     vector<size_t> valences(mesh.verts.size(),0);
 
     for(Halfedge* elm : mesh.trigs) {
-        valences[elm->vert]++;
-        valences[elm->next->vert]++;
-        valences[elm->next->next->vert]++;
+        valences[mesh.get_index(mesh.verts,elm->vert)]++;
+        valences[mesh.get_index(mesh.verts,elm->next->vert)]++;
+        valences[mesh.get_index(mesh.verts,elm->next->next->vert)]++;
     }
 
-    for(Halfedge* elm : mesh.verts) {
-        Halfedge* u(elm);
+    for(Vertex const& elm : mesh.verts) {
+        Halfedge* half(elm.half);
+        Halfedge* u(half);
         size_t valence = 0;
         do {
             valence++;
-            if(u->vert != elm->vert) error_vertind++;
+            if(u->vert != half->vert) error_vertind++;
             u = u->twin->next;
-        } while(u != elm);
-        if(valence != valences[elm->vert]) error_valence++; //cout << "v-e: " << valence << ", exp: " << valences[elm->vert] << endl; //error_valence++;
-    }
+        } while(u != half);
+        if(valence != valences[mesh.get_index(mesh.verts,half->vert)]) {
+                error_valence++; //cout << "v-e: " << valence << ", exp: " << valences[elm->vert] << endl; //error_valence++;
+                //cout << int(valence) - int(valences[mesh.get_index(mesh.verts,half->vert)]) << endl;
+            } 
+        }
 
     // print found errors and their occurence
 
@@ -96,8 +107,8 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
     vector<real> lengths;
     real L_max_2 = L_max*L_max;
     
-    for(auto halfedge :mesh.edges) {
-        lengths.push_back((mesh.vpos[halfedge->next->vert]-mesh.vpos[halfedge->vert]).norm2());
+    for(auto halfedge : mesh.edges) {
+        lengths.push_back((halfedge->next->vert->pos-halfedge->vert->pos).norm2());
     }
 
     // reorder the halfedge mesh and lengths such that the longest edges come first
@@ -114,11 +125,13 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
     for(size_t i(0);i<lengths.size();++i) {
         size_t k = indices[i];
         mesh.edges[i] = edges_tmp[k];
-        mesh.edges[i]->edge = i;
-        mesh.edges[i]->twin->edge = i;
+        mesh.edges[i]->edge = &mesh.edges[i];
+        mesh.edges[i]->twin->edge = &mesh.edges[i];
         lengths[i] = lengths_tmp[k];
         
     }
+
+    /*
 
     // we want to check each edge only once
     // (the newly generated edges will be appended at the end and we won't check them in this pass)
@@ -131,17 +144,17 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
             Halfedge* edge01(mesh.edges[i]);
             Halfedge* edge10(edge01->twin);
 
-            if(edge01 == edge10) {
+            if(edge01->trig == nullptr or edge10->trig == nullptr) {
                 // a remplir
             } else {
 
-                mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
+                mesh.vpos.push_back(0.5*(edge01->vert->pos+edge01->next->vert->pos));
                 mesh.verts.push_back(edge10);
                 size_t new_index(mesh.verts.size()-1);
 
                 // S for straight, A, B for the two sides 
                 // _0 are Halfedges going out from new_index
-                size_t K(mesh.edges.size());
+                size_t K(mesh.edges.size());nullptr
                 size_t M(mesh.trigs.size());
                 Halfedge* S_0 = new Halfedge;
                 Halfedge* S_1 = new Halfedge;
@@ -210,7 +223,7 @@ void split_edges    (HalfedgeMesh& mesh, real L_max) {
             }
 
         }
-    }
+    }*/
 #ifdef VERBOSE
     cout << endl << "enhanced mesh from " << num_t_init << " to " << mesh.trigs.size() << " triangles." << endl;
 #endif
@@ -231,6 +244,8 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
     size_t num_t_init = mesh.trigs.size();
 #endif
     vector<real> lengths;
+
+    /*
     
     for(auto halfedge :mesh.edges) {
         lengths.push_back((mesh.vpos[halfedge->next->vert]-mesh.vpos[halfedge->vert]).norm2());
@@ -352,7 +367,7 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 
             }
         }
-    }
+    }*/
 #ifdef VERBOSE
     cout << endl << "enhanced mesh from " << num_t_init << " to " << mesh.trigs.size() << " triangles." << endl;
 #endif
@@ -362,6 +377,7 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 // from the HalfedgeMesh. Here are some functions provided that render this task a bit easier
 
 void remove_edge(vector<Halfedge*>& edges,size_t edge_ind) {
+    /*
     if(edge_ind != edges.size()-1) {
         swap(edges[edge_ind],edges.back());
         Halfedge* u(edges[edge_ind]);
@@ -369,9 +385,11 @@ void remove_edge(vector<Halfedge*>& edges,size_t edge_ind) {
         u->twin->edge = edge_ind;
     }
     edges.pop_back();
+    */
 }
 
 void remove_vertex(vector<Halfedge*>& verts,size_t vert_ind) {
+    /*
     if(vert_ind != verts.size()-1) {
         swap(verts[vert_ind],verts.back());
         Halfedge* u(verts[vert_ind]);
@@ -382,9 +400,11 @@ void remove_vertex(vector<Halfedge*>& verts,size_t vert_ind) {
         } while(v != u);
     }
     verts.pop_back();
+    */
 }
 
 void remove_face(vector<Halfedge*>& faces,size_t face_ind) {
+    /*
     if(face_ind != faces.size()-1) {
         swap(faces[face_ind],faces.back());
         Halfedge* u(faces[face_ind]);
@@ -393,6 +413,7 @@ void remove_face(vector<Halfedge*>& faces,size_t face_ind) {
         u->next->next->trig = face_ind;
     }
     faces.pop_back();
+    */
 }
 
 // the collapse_edges function tests whether an edge is shorter than L_min and, 
@@ -405,7 +426,7 @@ void collapse_edges (HalfedgeMesh& mesh, real L_min) {
     cout << "COLLAPSE-EDGES" << endl;
     size_t num_t_init = mesh.trigs.size();
 #endif
-
+    /*
     vector<real> lengths;
     real L_min_2 = L_min*L_min;
     
@@ -594,7 +615,7 @@ void collapse_edges (HalfedgeMesh& mesh, real L_min) {
                 }
             }
         }
-    }
+    }*/
 #ifdef VERBOSE
     cout << endl << "simplified mesh from " << num_t_init << " to " << mesh.trigs.size() << " triangles." << endl;
 #endif
@@ -610,7 +631,7 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
     size_t num_t_init = mesh.trigs.size();
 #endif
     vector<real> lengths;
-    
+    /*
     for(auto halfedge :mesh.edges) {
         lengths.push_back((mesh.vpos[halfedge->next->vert]-mesh.vpos[halfedge->vert]).norm2());
     }
@@ -802,7 +823,7 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
                 }
             }
         }
-    }
+    }*/
 #ifdef VERBOSE
     cout << endl << "simplified mesh from " << num_t_init << " to " << mesh.trigs.size() << " triangles." << endl;
 #endif
@@ -836,7 +857,7 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
 #ifdef VERBOSE
     cout << "FLIP-EDGES" << endl;
 #endif
-
+    /*
     // compute the valence of each vertex (number of neighbouring triangles/edges)
     vector<size_t> valences(mesh.verts.size(),0);
 
@@ -948,7 +969,7 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
                 }
             }
         } 
-    }
+    }*/
 #ifdef VERBOSE
     cout << "flipped " << num_flipped << " edges." << endl;
 #endif 
@@ -959,7 +980,8 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
 void relax_vertices (Mesh& mesh) {
 #ifdef VERBOSE
     cout << "RELAX-VERTICES" << endl;
-#endif   
+#endif  
+    /* 
     vector<vector<size_t>> neighbours = generate_neighbours(mesh);
     vector<vec3> new_vertices(mesh.verts.size());
 
@@ -974,6 +996,7 @@ void relax_vertices (Mesh& mesh) {
     }
 
     mesh.verts = new_vertices;
+    */
 }
 
 // the same function as above, but implemented for a HalfedgeMesh
@@ -981,6 +1004,7 @@ void relax_vertices (HalfedgeMesh& mesh) {
 #ifdef VERBOSE
     cout << "RELAX-VERTICES" << endl;
 #endif
+    /*
     vector<vec3> new_vertices(mesh.vpos.size());
 
     for(size_t i(0);i<mesh.verts.size();++i) {
@@ -990,6 +1014,7 @@ void relax_vertices (HalfedgeMesh& mesh) {
         Halfedge* u(mesh.verts[i]);
         Halfedge* v = u;
         do {
+            //if(v == v->twin) 
             v = v->twin;
             new_pos += mesh.vpos[v->vert];
             v = v->next;
@@ -1000,6 +1025,7 @@ void relax_vertices (HalfedgeMesh& mesh) {
     }
 
     mesh.vpos = new_vertices;
+    */
 }
 
 // this function is used in project() and it finds the intersection of a ray, 
