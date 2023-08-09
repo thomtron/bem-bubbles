@@ -2,7 +2,7 @@
 #define HALFEDGEMESH_HPP
 
 #include <iostream>
-#include <vector>
+#include <list>
 
 #include "Mesh.hpp"
 
@@ -19,36 +19,57 @@ namespace Bem {
 // of this structure are presented in MeshManip.hpp/.cpp. In HalfedgeMesh.cpp we define the functions 
 // needed to translate between the Mesh and HalfedgeMesh representations.
 
+struct Vertex;
+
 struct Halfedge {
     Halfedge* twin;
     Halfedge* next;
-    size_t vert;
-    size_t edge;
-    size_t trig;
+    //size_t vert;
+    //size_t edge;
+    //size_t trig;
+    Vertex* vert;
+    Halfedge** edge;
+    Halfedge** trig;
+
 };
 
+struct Vertex {
+    Halfedge* half;
+    vec3 pos;
+    size_t index;
+};
+
+std::ostream& operator<<(std::ostream& output,Vertex const& v);
+
 struct HalfedgeMesh {
-    std::vector<vec3>      vpos;
-    std::vector<Halfedge*> verts;
-    std::vector<Halfedge*> trigs;
-    std::vector<Halfedge*> edges;
-    std::vector<Halfedge*> bounds;
+    std::list<Vertex>    verts;
+    std::list<Halfedge*> trigs;
+    std::list<Halfedge*> edges;
+    std::list<Halfedge*> bounds;
 
     ~HalfedgeMesh();
 
-    void clear();
-    bool check_validity() const;
+    void release();
+
+    /*
+    template<typename T>
+    size_t get_index(std::vector<T> const& vec, const T* elm) const {
+        size_t index = elm - &vec[0]; // internet says: ()/sizeof(T), but that didn't give correct results...
+        //std::cout << elm << " + " << &vec[0] << " + " << index << std::endl;
+        if(index >= vec.size()) throw(std::out_of_range("Bad Vertex pointer: out of range of Vertex vector."));
+        return index;
+    }*/
     
     HalfedgeMesh(Mesh const& other);
     HalfedgeMesh(HalfedgeMesh&&) = default;
     HalfedgeMesh() = default;
     HalfedgeMesh(HalfedgeMesh const& other);
     HalfedgeMesh& operator=(HalfedgeMesh const& other);
-    HalfedgeMesh& operator=(HalfedgeMesh&&) = default; // check this!
+    HalfedgeMesh& operator=(HalfedgeMesh&&) = default;
     
     void copy(HalfedgeMesh const& other);
 
-    static const size_t npos;
+    void update_vertex_indices();
 };
 
 HalfedgeMesh generate_halfedges(Mesh const& mesh);

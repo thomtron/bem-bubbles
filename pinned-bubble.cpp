@@ -24,11 +24,7 @@ Bem::real waveform(vec3 x,Bem::real t) {
 // THINK ABOUT THE MIRRORING OF THE NODES AT X=0 !!
 // VOLUME IST NOCH FALSCH !!
 
-int main() {
-    Mesh M;
-    import_ply("semi-sphere.ply",M);
-
-    // put all vertices with x-coord ~ 0 at the end of the mesh
+size_t set_boundary(Mesh& M) {
     vector<size_t> permutation(M.verts.size());
     vector<size_t> inverse_permutation(M.verts.size());
     iota(permutation.begin(),permutation.end(),0);
@@ -59,6 +55,16 @@ int main() {
         M.trigs[i] = trig;
     }
 
+    return npin;
+}
+
+int main() {
+    Mesh M;
+    import_ply("semi-sphere.ply",M);
+
+    // put all vertices with x-coord ~ 0 at the end of the mesh
+    size_t npin = set_boundary(M);
+
     export_ply("test.ply",M);
 
     // perfect!
@@ -67,9 +73,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 70e-6; // m
-    Bem::real pressure = 15e4; // Pa
-    string folder = "pinned-bubble-res-15e4-70e-6-2x/";
+    Bem::real radius   = 50e-6; // m
+    Bem::real pressure = 8e4; // Pa
+    string folder = "pinned-bubble-res-8e4-50e-6-remesh/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -77,7 +83,7 @@ int main() {
 
     // physical parameters in SI units
 
-    Bem::real p_infty = 2*101325.0; // N/m^2  ambient pressure                     Note: 101325.0 Pa = 1 atm by definition (see wikipedia)
+    Bem::real p_infty = 101325.0; // N/m^2  ambient pressure                     Note: 101325.0 Pa = 1 atm by definition (see wikipedia)
     Bem::real sigma = 0.07275;    // N/m    surface tension                      @ 20°C https://de.wikipedia.org/wiki/Oberfl%C3%A4chenspannung
     Bem::real r0 = radius;        // m      initial radius = reference length    from Versluis_2010
     Bem::real c = 1481.0;         // m/s    sound speed of water                 @ 20°C https://en.wikipedia.org/wiki/Speed_of_sound  -  no good source...
@@ -138,7 +144,29 @@ int main() {
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
 
-        //if(i%10 == 0) sim.remesh(0.2);
+        if((i-5)%10 == 0){
+            Bem::real L(0.08);
+            /*
+            HalfedgeMesh half;
+            generate_halfedges(half,sim.mesh);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+            split_edges(half,L*4.0/3.0);
+            collapse_edges(half,L*4.0/5.0);
+
+            half.update_vertex_indices();
+            sim.mesh = generate_mesh(half);
+
+            set_boundary(M);*/
+        }
 
         if(i%10 == 0){
             vector<size_t> inds(sim.mesh.verts.size() - npin);

@@ -2,7 +2,6 @@
 #include "Tuplet.hpp"
 
 #include <vector>
-#include <list>
 #include <algorithm> // for sort()
 #include <numeric>   // for iota()
 
@@ -10,11 +9,13 @@ using namespace std;
 
 namespace Bem {
 
+const size_t HalfedgeMesh::npos = -1;
+
 HalfedgeMesh::~HalfedgeMesh() {
-    release();
+    clear();
 }
 
-void HalfedgeMesh::release() {
+void HalfedgeMesh::clear() {
     for(Halfedge* elm : trigs) {
         delete elm->next->next;
         delete elm->next;
@@ -47,31 +48,48 @@ HalfedgeMesh& HalfedgeMesh::operator=(HalfedgeMesh const& other) {
     return *this;
 }
 
-void HalfedgeMesh::copy(HalfedgeMesh const& other) { // can be optimized very probably
-
-    generate_halfedges(*this,generate_mesh(other));
-    /*
+void HalfedgeMesh::copy(HalfedgeMesh const& other) {
     cout << "making copy." << endl;
-
+    vpos = other.vpos;
+    verts = vector<Halfedge*>(other.verts.size(),nullptr);
+    edges = vector<Halfedge*>(other.edges.size(),nullptr);
+    trigs = vector<Halfedge*>(other.trigs.size(),nullptr);
+    bounds = vector<Halfedge*>(other.bounds.size(),nullptr);
     for(Halfedge* elm : other.edges) {
-        Halfedge* A = new Halfedge;
-        Halfedge* B = new Halfedge;
+        if(elm->trig == npos) { // if at boundary
+            Halfedge* A = new Halfedge;
 
-        edges.push_back(A);
+            A->vert = elm->vert;
+            A->edge = elm->edge;
+            A->trig = elm->trig;
+            A->twin = A;
 
-        A->edge = &edges.back();
-        A->twin = B;
+            verts[A->vert] = A;
+            edges[A->edge] = A;
+            trigs[A->trig] = A;
+        } else {
+            Halfedge* A = new Halfedge;
+            Halfedge* B = new Halfedge;
 
-        B->edge = &edges.back();
-        B->twin = A; 
+            A->vert = elm->vert;
+            A->edge = elm->edge;
+            A->trig = elm->trig;
+            A->twin = B;
+
+            B->vert = elm->twin->vert;
+            B->edge = elm->twin->edge;
+            B->trig = elm->twin->trig;
+            B->twin = A;
+
+            verts[A->vert] = A;
+            edges[A->edge] = A;
+            trigs[A->trig] = A;
+
+            verts[B->vert] = B;
+            edges[B->edge] = B;
+            trigs[B->trig] = B; 
+        }
     }
-    for(Vertex const& elm : other.verts) {
-        verts.push_back(elm);
-        Vertex* vert(&verts.back());
-        vert->half = 
-    }
-
-
     for(Halfedge* elm : other.trigs) {
         size_t trig_ind = elm->trig;
         Halfedge* A = edges[elm->edge];
@@ -85,13 +103,16 @@ void HalfedgeMesh::copy(HalfedgeMesh const& other) { // can be optimized very pr
         B->next = C;
         C->next = A;
     }
-    */
 }
 
-/*
 HalfedgeMesh generate_halfedges(Mesh const& mesh) {
-
     HalfedgeMesh result;
+    generate_halfedges(result,mesh);
+    return result;
+}
+
+void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
+    result.clear();
     
     // output arrays
     result.vpos = mesh.verts;
@@ -155,7 +176,7 @@ HalfedgeMesh generate_halfedges(Mesh const& mesh) {
             // indices are identical. In the other case, the edge was pushed back only
             // once and therefore we have a boundary edge, the case treated here:
 
-            size_t ind = edge_inds[i];
+            size_t ind  = edge_inds[i];
             Halfedge* A = edge_halfs[ind];
 
             A->twin = A;
@@ -187,154 +208,33 @@ HalfedgeMesh generate_halfedges(Mesh const& mesh) {
 
     }
 
-    return result;
-}
-*/
-
-HalfedgeMesh generate_halfedges(Mesh const& mesh) {
-    HalfedgeMesh result;
-    generate_halfedges(result,mesh);
-    return result;
-}
-
-void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
-    result.release();
-    // output arrays
-
-    vector<Vertex> verts;
-    
-    for(vec3 const& vec : mesh.verts) {
-        verts.push_back({nullptr,vec,0});
-    }
-
-    //result.trigs = vector<Halfedge*>(mesh.trigs.size());
-
-    
-    vector<Tuplet> edges;
-    vector<Halfedge*> edge_halfs;
-
-    for(size_t i(0);i<mesh.trigs.size();++i) {
-        Triplet t(mesh.trigs[i]);
-
-        Halfedge* A = new Halfedge;
-        Halfedge* B = new Halfedge;
-        Halfedge* C = new Halfedge;
-
-        // here all relations between faces,vertices and halfedges are created
-
-        //result.trigs[i] = A;
-        result.trigs.push_back(A);
-
-        //result.verts[t.a].half = A; // these are overwritten multiple times in this loop
-        //result.verts[t.b].half = B;
-        //result.verts[t.c].half = C;
-
-        verts[t.a].half = A; // these are overwritten multiple times in this loop
-        verts[t.b].half = B;
-        verts[t.c].half = C;
-
-        A->next = B;
-        A->trig = &result.trigs.back();
-        A->edge = nullptr;
-        A->twin = nullptr;
-
-        B->next = C;
-        B->trig = &result.trigs.back();
-        B->edge = nullptr;
-        B->twin = nullptr;
-
-        C->next = A;
-        C->trig = &result.trigs.back();
-        C->edge = nullptr;
-        C->twin = nullptr;
-
-        // the "glue" between the triangles is given by the edges, for which 
-        // we have to generate a list using the Tuplet class
-
-        edges.push_back(Tuplet(t.a,t.b));
-        edges.push_back(Tuplet(t.b,t.c));
-        edges.push_back(Tuplet(t.c,t.a));
-
-        edge_halfs.push_back(A);
-        edge_halfs.push_back(B);
-        edge_halfs.push_back(C);
-    }
-
-    size_t K(edges.size());
-    vector<size_t> edge_inds(K);
-    iota(edge_inds.begin(),edge_inds.end(),0);
-    sort(edge_inds.begin(),edge_inds.end(),[&edges](size_t a,size_t b) { return edges[a] < edges[b]; });
-
-    for(size_t i(0);i<K;++i) {
-
-        if(i == K-1 or edges[edge_inds[i]]<edges[edge_inds[i+1]]) { 
-            // if the edge was pushed back two times (from two triangles), the edge is
-            // an interior edge. The present condition evaluates false, since the two 
-            // indices are identical. In the other case, the edge was pushed back only
-            // once and therefore we have a boundary edge, the case treated here:
-
-            size_t ind  = edge_inds[i];
-            Halfedge* A = edge_halfs[ind];
-
-            result.edges.push_back(A);
-
-            A->twin = A;
-            A->edge = &result.edges.back();
-
-        } else {
-
-            size_t ind1 = edge_inds[i];
-            i++;
-            size_t ind2 = edge_inds[i];
-
-            Halfedge* A = edge_halfs[ind1];
-            Halfedge* B = edge_halfs[ind2];
-
-            // now we can add the final informations to the halfedges
-
-            A->twin = B;
-            B->twin = A;
-
-            result.edges.push_back(A);
-
-            
-            A->edge = &result.edges.back();
-            B->edge = &result.edges.back();
-
-            //Halfedge** h = result.edges[0]->edge;
-
-            //cout << A->edge << " - " << h << endl;
-
-            //cout << result.get_index(result.edges,h) << ' ';// << endl;
-
-
-        }
-    }
-
-
-    result.verts = list<Vertex>(verts.begin(),verts.end());
-    
-    for(Vertex& elm : result.verts) {
-        Halfedge* u(elm.half);
+    for(Halfedge* u : result.verts) {
+        Halfedge* start(u);
         Halfedge* first_boundary(nullptr);
         Halfedge* last_boundary(nullptr);
 
         u = u->twin->next;
         //size_t k(0);
-        while(u != elm.half) {
+        while(u != start) {
             if(u == u->twin) { // handle boundary edges! (add corresponding halfedges)
                 //cout << "  > edge-piece nr. " << k++ << endl;
                 Halfedge* B = new Halfedge;
                 B->twin = u;
-                B->trig = nullptr;
+                B->trig = HalfedgeMesh::npos;
                 B->next = last_boundary;
                 B->edge = u->edge;
+                B->vert = u->next->vert;
 
                 u->twin = B;
                 u = u->next;
 
                 last_boundary = B;
-                if(first_boundary == nullptr) first_boundary = B;
+                if(first_boundary == nullptr) {
+                    first_boundary = B;
+                    // since this part of the code is called once for each boundary,
+                    // we can append now an element to the bounds array
+                    result.bounds.push_back(B);
+                } 
 
             } else {
                 u = u->twin->next;
@@ -344,18 +244,6 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
             first_boundary->next = last_boundary;
         }
     }
-
-    for(Vertex& elm : result.verts) {
-        Halfedge* u(elm.half);
-        u->vert = &elm;
-        u = u->twin->next;
-        while(u != elm.half) {
-            u->vert = &elm;
-            u = u->twin->next;
-        }
-    }
-
-    result.update_vertex_indices();
 }
 
 Mesh generate_mesh(HalfedgeMesh const& mesh) {
@@ -365,32 +253,88 @@ Mesh generate_mesh(HalfedgeMesh const& mesh) {
 }
 
 void generate_mesh(Mesh& result, HalfedgeMesh const& mesh) {
-
-    for(Vertex const& elm : mesh.verts)
-        result.verts.push_back(elm.pos);
-
+    result.clear();
+    result.verts = mesh.vpos;
     for(Halfedge* elm : mesh.trigs) {
-        Triplet t;
-
-        //vector<Vertex>::iterator const& it(*(elm->vert));
-        //auto index = (elm->vert - &mesh.verts[0])/sizeof(Vertex); // mesh.verts.begin() + 
-        //auto index = distance(mesh.verts.begin(),vector<Vertex>::iterator(&mesh.verts[7])); //vector<const Vertex>::iterator(elm->vert));
-
-        t.a = elm->vert->index;
-        t.b = elm->next->vert->index;
-        t.c = elm->next->next->vert->index;
-
+        Triplet t(elm->vert,elm->next->vert,elm->next->next->vert);
         result.trigs.push_back(t);
     }
 }
 
-void HalfedgeMesh::update_vertex_indices() {
-    size_t i(0);
-    for(Vertex& elm : verts) {
-        elm.index = i;
-        i++;
+// a function to check the validity of a HalfedgeMesh (check that all pointers 
+// point to an element and that they obey the connectivity rules). It was mainly
+// introduced for debugging.
+bool HalfedgeMesh::check_validity() const {
+#ifdef VERBOSE
+    cout << "checking validity of generated mesh: ";
+#endif
+    // number of errors
+    size_t error_nnn(0);
+    size_t error_trigind(0);
+    size_t error_tt(0);
+    size_t error_edgeind(0);
+    size_t error_vertind(0);
+    size_t error_valence(0);
+
+    for(Halfedge* elm : trigs) {
+        if(elm->next->next->next != elm) error_nnn++;           // check that next-pointers connect correctly
+        if(elm->next->trig != elm->trig) error_trigind++;       // check that halfedges point to same triangle
+        if(elm->next->next->trig != elm->trig) error_trigind++; // -^
     }
+    for(Halfedge* elm : edges) {
+        if(elm->twin->twin != elm) error_tt++;                  // check that twin of twin is element itself
+        if(edges[elm->edge] != elm) error_edgeind++;       // check that edge indices are correct
+        if(edges[elm->twin->edge] != elm) error_edgeind++; // check that edge indices are correct
+    }
+
+
+    // the following 18 lines are for checking that the valence number computed by two different methods are consistent
+    vector<size_t> valences(verts.size(),0);
+
+    for(Halfedge* elm : trigs) {
+        valences[elm->vert]++;
+        valences[elm->next->vert]++;
+        valences[elm->next->next->vert]++;
+    }
+
+    // add one for all vertices at boundaries
+    for(Halfedge* elm : bounds) {
+        Halfedge* u(elm);
+        do {
+            valences[u->vert]++;
+            u = u->next; // slide along boundary
+        } while(u != elm);
+    }
+
+    for(Halfedge* elm : verts) {
+        Halfedge* u(elm);
+        size_t valence = 0;
+        do {
+            valence++;
+            if(u->vert != elm->vert) error_vertind++;
+            u = u->twin->next;
+        } while(u != elm);
+        if(valence != valences[elm->vert]) error_valence++; 
+    }
+
+
+//#ifdef VERBOSE
+    // print found errors and their occurence
+    if(error_nnn>0)     cout << "error: next->next->next not unity  (" << error_nnn     << ")" << endl;
+    if(error_trigind>0) cout << "error: bad triangle index          (" << error_trigind << ")" << endl;
+    if(error_tt>0)      cout << "error: twin->twin not unity        (" << error_tt      << ")" << endl;
+    if(error_edgeind>0) cout << "error: bad edge index              (" << error_edgeind << ")" << endl;
+    if(error_valence>0) cout << "error: bad valence number          (" << error_valence << ")" << endl;
+    if(error_vertind>0) cout << "error: bad vert index              (" << error_vertind << ")" << endl;
+//#endif
+
+    return (error_nnn     == 0 and
+            error_trigind == 0 and
+            error_edgeind == 0 and
+            error_valence == 0 and
+            error_vertind == 0 );
 }
+
 
 
 } // namespace Bem
