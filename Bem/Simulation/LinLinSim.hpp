@@ -46,7 +46,7 @@ public:
     virtual void evolve_system(real dp, bool fixdt = false) override;
     void evolve_system_RK4(real dp, bool fixdt = false);
 
-    void remesh(real L);
+    virtual void remesh(real L);
 
     void set_damping_factor(real value) {
         damping_factor = value;

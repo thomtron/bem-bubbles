@@ -22,50 +22,12 @@ Bem::real waveform(vec3 x,Bem::real t) {
 }
 
 // THINK ABOUT THE MIRRORING OF THE NODES AT X=0 !!
-// VOLUME IST NOCH FALSCH !!
 
-size_t set_boundary(Mesh& M) {
-    vector<size_t> permutation(M.verts.size());
-    vector<size_t> inverse_permutation(M.verts.size());
-    iota(permutation.begin(),permutation.end(),0);
-    vector<vec3>& pos(M.verts);
-    size_t k(pos.size());
-    size_t npin(0);
-    for(size_t i(0);i<k;++i) {
-        if(abs(pos[i].x)<1e-5) {
-            swap(permutation[i],permutation[k-1]);
-            swap(pos[i],pos[k-1]);
-            i--;
-            k--;
-            npin++;
-        }
-    }
-    for(size_t i(0);i<permutation.size();++i) {
-        inverse_permutation[permutation[i]] = i;
-    }
-    for(size_t i(0);i<M.verts.size();++i) {
-        if(i>=M.verts.size()-npin) cout << "pinned: ";
-        cout << M.verts[i].x << endl;
-    }
-    for(size_t i(0);i<M.trigs.size();++i) {
-        Triplet trig(M.trigs[i]);
-        trig.a = inverse_permutation[trig.a];
-        trig.b = inverse_permutation[trig.b];
-        trig.c = inverse_permutation[trig.c];
-        M.trigs[i] = trig;
-    }
 
-    return npin;
-}
 
 int main() {
     Mesh M;
     import_ply("semi-sphere.ply",M);
-
-    // put all vertices with x-coord ~ 0 at the end of the mesh
-    size_t npin = set_boundary(M);
-
-    export_ply("test.ply",M);
 
     // perfect!
 
@@ -73,9 +35,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 50e-6; // m
-    Bem::real pressure = 8e4; // Pa
-    string folder = "pinned-bubble-res-8e4-50e-6-remesh/";
+    Bem::real radius   = 40e-6; // m
+    Bem::real pressure = 4e4; // Pa
+    string folder = "pinned-bubble-res-4e4-40e-6-remesh/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -125,15 +87,19 @@ int main() {
     Bem::real dp = 0.005;
     size_t N(2000);
     
-    ColocSimPin sim(M,npin,P_ref,P_gas0,Sigma,Gamma,&waveform);
+    ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
-    sim.set_damping_factor(0.2);
-    sim.set_minimum_element_size(0.1);
+    sim.set_damping_factor(0.8);
+    sim.set_minimum_element_size(0.2);
     sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
     ofstream output(folder+"times.csv");
+
+    Bem::real remesh_coeff = 0.15;
+
+    sim.remesh(remesh_coeff);
 
     size_t substeps = 4;
     for(size_t i(0);i<N;++i){
@@ -144,38 +110,20 @@ int main() {
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
 
-        if((i-5)%10 == 0){
-            Bem::real L(0.08);
-            /*
-            HalfedgeMesh half;
-            generate_halfedges(half,sim.mesh);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-            split_edges(half,L*4.0/3.0);
-            collapse_edges(half,L*4.0/5.0);
-
-            half.update_vertex_indices();
-            sim.mesh = generate_mesh(half);
-
-            set_boundary(M);*/
-        }
-
-        if(i%10 == 0){
-            vector<size_t> inds(sim.mesh.verts.size() - npin);
+        if(i%6 == 0){
+            vector<size_t> inds(sim.mesh.verts.size() - sim.N_pin);
             iota(inds.begin(),inds.end(),0);
             PotVec pot = sim.get_phi();
             sim.mesh = l2smooth(sim.mesh,pot,inds);
             sim.set_phi(pot);
             cout << "smoothed" << endl;
+            if(i%12 == 0) {
+                sim.remesh(remesh_coeff);
+                cout << "remeshed" << endl;
+            }
         }
+
+        //if((i-3)%12 == 0) sim.remesh(remesh_coeff); // invalidates psi- and partly phi values
         
         auto start = high_resolution_clock::now();
 

@@ -34,6 +34,10 @@ int main() {
     collapse_edges(half,L*4.0/5.0);
     split_edges(half,L*4.0/3.0);
     collapse_edges(half,L*4.0/5.0);
+    flip_edges(half,1);
+    flip_edges(half,1);
+
+    relax_vertices(half);
 
 
     //flip_edges(half,1);

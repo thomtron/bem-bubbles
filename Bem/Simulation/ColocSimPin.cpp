@@ -1,6 +1,10 @@
 #include "ColocSimPin.hpp"
 #include "../Integration/Integrator.hpp"
+#include "../Mesh/HalfedgeMesh.hpp"
+#include "../Mesh/MeshManip.hpp"
+#include "../Mesh/MeshIO.hpp"
 #include <vector>
+#include <numeric> // for iota
 #include <omp.h>
 
 
@@ -129,6 +133,187 @@ CoordVec ColocSimPin::position_t(Mesh const& m,PotVec& pot) const {
         //cout << "pot(" << i << ") = " << x[i] << endl;
     }
     return result;
+}
+
+void ColocSimPin::rearrange_boundary(Mesh& M,vector<bool> bound) const {
+    vector<size_t> permutation(M.verts.size());
+    vector<size_t> inverse_permutation(M.verts.size());
+    iota(permutation.begin(),permutation.end(),0);
+    vector<vec3>& pos(M.verts);
+    size_t k(pos.size());
+    for(size_t i(0);i<k;++i) {
+        if(bound[i]) {
+            swap(permutation[i],permutation[k-1]);
+            swap(pos[i],pos[k-1]);
+            swap(bound[i],bound[k-1]);
+            i--;
+            k--;
+        }
+    }
+    for(size_t i(0);i<permutation.size();++i) {
+        inverse_permutation[permutation[i]] = i;
+    }
+    for(size_t i(0);i<M.trigs.size();++i) {
+        Triplet trig(M.trigs[i]);
+        trig.a = inverse_permutation[trig.a];
+        trig.b = inverse_permutation[trig.b];
+        trig.c = inverse_permutation[trig.c];
+        M.trigs[i] = trig;
+    }
+}
+
+size_t ColocSimPin::set_x_boundary(Mesh& M) const {
+    vector<size_t> permutation(M.verts.size());
+    vector<size_t> inverse_permutation(M.verts.size());
+    iota(permutation.begin(),permutation.end(),0);
+    vector<vec3>& pos(M.verts);
+    size_t k(pos.size());
+    size_t npin(0);
+    real threshold = 1e-5;
+    for(size_t i(0);i<k;++i) {
+        if(abs(pos[i].x)<threshold) {
+            pos[i].x = 0.0;
+            swap(permutation[i],permutation[k-1]);
+            swap(pos[i],pos[k-1]);
+            i--;
+            k--;
+            npin++;
+        }
+    }
+    for(size_t i(0);i<permutation.size();++i) {
+        inverse_permutation[permutation[i]] = i;
+    }
+    for(size_t i(0);i<M.trigs.size();++i) {
+        Triplet trig(M.trigs[i]);
+        trig.a = inverse_permutation[trig.a];
+        trig.b = inverse_permutation[trig.b];
+        trig.c = inverse_permutation[trig.c];
+        M.trigs[i] = trig;
+    }
+    cout << "npin = " << npin << endl;
+    return npin;
+}
+
+void ColocSimPin::remesh(real L) {
+
+    //export_mesh("before_remesh.ply");
+    //cout << "           before" << endl;
+    
+    PotVec new_curv_params = curvature_param();
+
+    curvature_params = damping_factor*curvature_params + (1.0-damping_factor)*new_curv_params;
+
+    if(min_elm_size > 0.0) {
+        for(real& elm : curvature_params)
+            elm = max(min(elm,1.0/min_elm_size),1.0/max_elm_size);
+    }
+    
+    HalfedgeMesh manip;
+    generate_halfedges(manip,mesh);
+    
+    //if(mesh.check_validity()) cout << "valid." << endl;
+
+    split_edges(manip,curvature_params,L*4.0/3.0);
+    collapse_edges(manip,curvature_params,L*4.0/5.0);
+    flip_edges(manip,1);
+    flip_edges(manip,1);
+    //split_edges(manip,curvature_params,L*4.0/3.0);
+    collapse_edges(manip,curvature_params,L*4.0/5.0);
+    flip_edges(manip,1);
+    flip_edges(manip,1);
+    //split_edges(manip,curvature_params,L*4.0/3.0);
+    collapse_edges(manip,curvature_params,L*4.0/5.0);
+    flip_edges(manip,1);
+    flip_edges(manip,1);
+
+    Mesh new_mesh = generate_mesh(manip);
+
+    // determine the vertices that are on the loop:
+
+    Halfedge* bound = manip.bounds[0];
+    Halfedge* u(bound);
+    //size_t i(0);
+    vector<bool> bounds(manip.verts.size(),false);
+    do {
+        //cout << u->vert << ", " << i++ << endl;
+        bounds[u->vert] = true;
+        u = u->next;
+    } while(u != bound);
+
+    rearrange_boundary(new_mesh,bounds);
+    //cout << (new_mesh.check_validity() ? "valid" : "bad") << endl;
+
+    //if(manip.check_validity()) cout << "halfedgemesh valid. 0" << endl;
+
+    //export_ply("after_collapse_still_valid.ply",new_mesh);
+
+    //cout << "           after_collapse" << endl;
+
+    //size_t num = set_x_boundary(new_mesh); // mixes arrays up!
+
+    assert(bound_inds.size() == N_pin);
+
+
+    
+    CoordVec normals = generate_vertex_normals(new_mesh);
+
+    CoordVec meshverts = new_mesh.verts;
+    relax_vertices(new_mesh); // changes vertex positions
+    CoordVec pinned(N_pin);
+    for(size_t i(0);i<N_pin;++i) {
+        pinned[i] = meshverts[meshverts.size()-N_pin+i];
+        //cout << pinned[i] << endl;
+        new_mesh.verts.pop_back();
+        normals.pop_back();
+    }
+
+    
+    vector<real> new_phi;
+
+    // projecting the new vertices back on the original surface
+
+    project_and_interpolate(new_mesh,normals,new_phi, mesh, make_copy(phi));
+
+    for(vec3 const& elm : pinned) {
+        new_mesh.verts.push_back(elm);
+        new_phi.push_back(0.0);
+    }
+
+    mesh = new_mesh;
+
+    set_phi(new_phi);
+
+    //if(mesh.check_validity()) cout << "valid." << endl;
+
+    /*
+    size_t l(0);
+    for(vec3 const& elm : mesh.verts) {
+        if(abs(elm.x)<1e-5) l++;
+    }
+    cout << "number of bounds: " << l << endl;
+
+    l = 0;
+    for(Triplet const& t : mesh.trigs) {
+        size_t nb(0);
+        if(abs(mesh.verts[t.a].x)<1e-5) nb++;
+        if(abs(mesh.verts[t.b].x)<1e-5) nb++;
+        if(abs(mesh.verts[t.c].x)<1e-5) nb++;
+
+        if(nb == 3) throw(out_of_range("daaamn"));
+        if(nb == 2) l++;
+    }*/
+
+    //cout << "number of bounds (trigs): " << l << endl;
+
+    //export_ply("critical.ply",mesh);
+    //cout << "           critical" << endl;
+
+    //generate_halfedges(manip,mesh);
+    //if(manip.check_validity()) {
+    //    cout << "halfedgemesh valid. 2" << endl;
+    //} else {
+    //    throw("shit");
+    //}
 }
 
 /* presumably there is no need to change...

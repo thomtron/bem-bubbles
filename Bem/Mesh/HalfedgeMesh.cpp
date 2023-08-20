@@ -213,9 +213,8 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
         Halfedge* first_boundary(nullptr);
         Halfedge* last_boundary(nullptr);
 
-        u = u->twin->next;
         //size_t k(0);
-        while(u != start) {
+        do {
             if(u == u->twin) { // handle boundary edges! (add corresponding halfedges)
                 //cout << "  > edge-piece nr. " << k++ << endl;
                 Halfedge* B = new Halfedge;
@@ -239,7 +238,7 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh) {
             } else {
                 u = u->twin->next;
             }
-        }
+        } while(u != start);
         if(first_boundary != nullptr) {
             first_boundary->next = last_boundary;
         }
@@ -259,6 +258,15 @@ void generate_mesh(Mesh& result, HalfedgeMesh const& mesh) {
         Triplet t(elm->vert,elm->next->vert,elm->next->next->vert);
         result.trigs.push_back(t);
     }
+}
+
+bool at_boundary_u(Halfedge* vert) {
+    Halfedge* u(vert);
+    do {
+        if(u->trig == HalfedgeMesh::npos or u->twin->trig == HalfedgeMesh::npos) return true;
+        u = u->twin->next;
+    } while(u != vert);
+    return false;
 }
 
 // a function to check the validity of a HalfedgeMesh (check that all pointers 
@@ -311,10 +319,16 @@ bool HalfedgeMesh::check_validity() const {
         size_t valence = 0;
         do {
             valence++;
-            if(u->vert != elm->vert) error_vertind++;
+            if(u->vert != elm->vert) {
+                error_vertind++;
+                if(at_boundary_u(verts[u->vert])) cout << "boundary" << endl;
+            } 
             u = u->twin->next;
         } while(u != elm);
-        if(valence != valences[elm->vert]) error_valence++; 
+        if(valence != valences[elm->vert]){
+            error_valence++; 
+            cout << valence << " -%- " << valences[elm->vert] << endl;
+        } 
     }
 
 

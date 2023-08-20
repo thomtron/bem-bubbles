@@ -334,7 +334,7 @@ void LinLinSim::remesh(real L) {
     // soon as most of the edges verify the condition.
 
     //split_edges(manip,curvature_params,L*4.0/3.0); 
-    /*
+    
     split_edges(manip,curvature_params,L*0.75); // This "shakes" the mesh up a bit, since most of the
     flip_edges(manip,1);                        // edges are splitted -> gives better stability in some cases
     flip_edges(manip,1);
@@ -356,7 +356,7 @@ void LinLinSim::remesh(real L) {
     flip_edges(manip,1);
     relax_vertices(manip);
     flip_edges(manip,1);
-    relax_vertices(manip);*/
+    relax_vertices(manip);
     vector<real> new_phi;
     
     Mesh new_mesh = generate_mesh(manip);

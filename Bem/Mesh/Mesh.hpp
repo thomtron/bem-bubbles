@@ -23,6 +23,8 @@ struct Mesh {
     void rotate(vec3 v);
     void translate(vec3 v);
     void clear();
+
+    bool check_validity() const;
 };
 
 // generate_triangle_indices returns for each vertex a vector of indices 

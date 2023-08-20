@@ -55,6 +55,23 @@ void Mesh::clear() {
     trigs.clear();
 }
 
+bool Mesh::check_validity() const {
+    bool result = true;
+    vector<bool> used(verts.size(),false);
+    for(Triplet const& trig : trigs) {
+        used[trig.a] = true;
+        used[trig.b] = true;
+        used[trig.c] = true;
+    }
+    for(bool elm : used) {
+        if(not elm) result = false;
+    }
+    if(not result) {
+        cout << "not all verts used!" << endl;
+    }
+    return result;
+}
+
 vector<vector<size_t>> generate_triangle_indices(Mesh const& mesh) {
     vector<vector<size_t>> triangle_indices(mesh.verts.size());
     size_t m(mesh.trigs.size());

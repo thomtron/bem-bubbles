@@ -13,8 +13,9 @@ namespace Bem {
 class ColocSimPin : public LinLinSim {
 public:
 
-    ColocSimPin(Mesh const& initial, size_t N_pin,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
-        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(N_pin) {
+    ColocSimPin(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
+        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(0) {
+            N_pin = set_x_boundary(mesh);
             // The Simulation assumes that the last N_pin vertices of the Mesh initial are pinned, which means they do not change their position throughout
             // the simulation. Furthermore it is assumed that the vertices are pinned on an infinite flat plane; these vertices thus must lie in the same plane.
             // Only the first N-N_pin vertices act as colocation points such that the resulting linear system is again exactly determined (not overdetermined).
@@ -40,11 +41,14 @@ public:
     virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
 
     virtual CoordVec position_t(Mesh const& m,PotVec& pot) const override;
+    virtual void remesh(real L) override;
     //PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
     //PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 
-private:
     size_t N_pin;
+    
+    void rearrange_boundary(Mesh& M,std::vector<bool> bound) const;
+    size_t set_x_boundary(Mesh& M) const;
 
 };
 
