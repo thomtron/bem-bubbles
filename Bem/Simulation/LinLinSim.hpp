@@ -44,7 +44,7 @@ public:
     }
     
     virtual void evolve_system(real dp, bool fixdt = false) override;
-    void evolve_system_RK4(real dp, bool fixdt = false);
+    virtual void evolve_system_RK4(real dp, bool fixdt = false);
 
     virtual void remesh(real L);
 
@@ -64,7 +64,6 @@ public:
     std::vector<real> kappa(Mesh const& m) const;
 
     virtual CoordVec position_t(Mesh const& m,PotVec& pot) const;
-    virtual CoordVec position_t(Mesh const& m,PotVec& pot, PotVec& x) const;
     PotVec   pot_t(Mesh const& m,CoordVec const& gradients, real t) const;
     PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 

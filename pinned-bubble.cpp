@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 40e-6; // m
     Bem::real pressure = 4e4; // Pa
-    string folder = "pinned-bubble-res-4e4-40e-6-remesh/";
+    string folder = "pinned-bubble-res-4e4-40e-6-new-test-beta-0.5-lower-res/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.15;
+    Bem::real remesh_coeff = 0.2;
 
     sim.remesh(remesh_coeff);
 

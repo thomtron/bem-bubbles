@@ -111,8 +111,9 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
     // N_pin values of x (in G*x = H*phi) will be the potential values at the boundary.
 
     for(size_t i(m.verts.size()-N_pin);i<m.verts.size();++i) {
+        Eigen::VectorXd tmp(G.col(i));
         G.col(i) = -H.col(i);
-        H.col(i) *= 0.0;
+        H.col(i) = -tmp;
     }
 
 #ifdef VERBOSE
@@ -122,16 +123,71 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
 }
 
+constexpr real beta = 0.5;
+constexpr real costheta_eq = -0.5; // = cos(60°)
+
+
+// costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface
+// and normal is surf normal at contact line)
+real drift_velocity(real costheta) {
+    return beta*(costheta_eq - costheta);
+}
+
 
 CoordVec ColocSimPin::position_t(Mesh const& m,PotVec& pot) const {
-    //cout << "myfunc!" << endl;
-    PotVec x;
-    CoordVec result = LinLinSim::position_t(m,pot,x);
+
+    CoordVec result;
+
+    // pot contains phi values for tangent_gradients
+    vector<vec3> tangent_gradients = generate_tangent_gradients(m,pot);
+
+    // but the N_pin last elements must be filled with the normal gradients
+    // before solving the system (note that for RK4, they may be updated in the function...)
     for(size_t i(m.verts.size()-N_pin);i<m.verts.size();++i) {
-        result[i] = vec3(); // set velocity at pinned nodes to zero
-        pot[i] = x[i]; // update the (yet unknown) potential value at the pinned nodes
+        pot[i] = psi(i);
+    }
+
+    // setting up the system of equations and solving it.
+    Eigen::MatrixXd G,H;
+    assemble_matrices(G,H,m);
+    Eigen::VectorXd psi_l = solve_system(G,H*make_copy(pot));
+
+    vector<vec3> normals = generate_triangle_normals(m);
+    vector<vector<size_t>> triangle_indices = generate_triangle_indices(m);
+
+    vector<vec3> vertex_normals = generate_vertex_normals(m);
+    vector<vec3> vertex_gradients;
+
+    for(size_t i(0);i<m.verts.size();++i) {
+        real num(0.0);
+        vec3 grad;
+        for(size_t index : triangle_indices[i]) {
+
+            grad += tangent_gradients[index] + psi_l(i)*normals[index];
+            num++;
+        }
+        grad *= 1.0/num;
+
+        vertex_gradients.push_back(grad);
+    }
+
+    result = vertex_gradients;
+
+    for(size_t i(m.verts.size()-N_pin);i<m.verts.size();++i) {
+        vec3 normal(vertex_normals[i]);
+        real costheta = normal.x;
+        normal.x = 0.0;
+        normal.normalize(); // this vector is tangential to the solid surface  
+        result[i] = normal*drift_velocity(costheta);
+
+        //result[i] = vec3(); // set velocity at pinned nodes to zero
+        
+
+        pot[i] = psi_l(i); // update the (yet unknown) potential value at the pinned nodes
+        
         //cout << "pot(" << i << ") = " << x[i] << endl;
     }
+
     return result;
 }
 
