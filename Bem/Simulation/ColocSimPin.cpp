@@ -123,8 +123,8 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
 }
 
-constexpr real beta = 0.5;
-constexpr real costheta_eq = -0.5; // = cos(60°)
+constexpr real beta = 0.3;
+constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
 
 
 // costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface

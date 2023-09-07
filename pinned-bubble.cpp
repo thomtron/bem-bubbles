@@ -27,7 +27,7 @@ Bem::real waveform(vec3 x,Bem::real t) {
 
 int main() {
     Mesh M;
-    import_ply("semi-sphere.ply",M);
+    import_ply("video-1-new.ply",M);
 
     // perfect!
 
@@ -35,9 +35,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 40e-6; // m
-    Bem::real pressure = 4e4; // Pa
-    string folder = "pinned-bubble-res-4e4-40e-6-new-test-beta-0.5-lower-res/";
+    Bem::real radius   = 38.4e-6; // m
+    Bem::real pressure = 20e3; // Pa
+    string folder = "pinned/r=38.4e-6_p=60e3_beta=0.2_rem=0.18/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -49,7 +49,7 @@ int main() {
     Bem::real sigma = 0.07275;    // N/m    surface tension                      @ 20°C https://de.wikipedia.org/wiki/Oberfl%C3%A4chenspannung
     Bem::real r0 = radius;        // m      initial radius = reference length    from Versluis_2010
     Bem::real c = 1481.0;         // m/s    sound speed of water                 @ 20°C https://en.wikipedia.org/wiki/Speed_of_sound  -  no good source...
-    Bem::real f = 130000;         // Hz     acoustic frequency                   from Versluis_2010
+    Bem::real f = 100e3;         // Hz     acoustic frequency                   from Versluis_2010
     Bem::real l = c/f;            // m      acoustic wavelength
     Bem::real pa = pressure;      // N/m^2  acoustic pressure amplitude          from Versluis_2010
     Bem::real p_vap = 2300.0;     // N/m^2  water vapour pressure                @ 20°C https://en.wikipedia.org/wiki/Vapor_pressure
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.2;
+    Bem::real remesh_coeff = 0.18;
 
     sim.remesh(remesh_coeff);
 
