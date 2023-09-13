@@ -35,9 +35,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 38.4e-6; // m
-    Bem::real pressure = 20e3; // Pa
-    string folder = "pinned/r=38.4e-6_p=60e3_beta=0.2_rem=0.18/";
+    Bem::real radius   = 128e-6; // m
+    Bem::real pressure = 33e3; // Pa
+    string folder = "pinned/f=30e3_r=128e-6_p=33e3_beta=0.3_rem=0.1/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -49,7 +49,7 @@ int main() {
     Bem::real sigma = 0.07275;    // N/m    surface tension                      @ 20°C https://de.wikipedia.org/wiki/Oberfl%C3%A4chenspannung
     Bem::real r0 = radius;        // m      initial radius = reference length    from Versluis_2010
     Bem::real c = 1481.0;         // m/s    sound speed of water                 @ 20°C https://en.wikipedia.org/wiki/Speed_of_sound  -  no good source...
-    Bem::real f = 100e3;         // Hz     acoustic frequency                   from Versluis_2010
+    Bem::real f = 30e3;         // Hz     acoustic frequency                   from Versluis_2010
     Bem::real l = c/f;            // m      acoustic wavelength
     Bem::real pa = pressure;      // N/m^2  acoustic pressure amplitude          from Versluis_2010
     Bem::real p_vap = 2300.0;     // N/m^2  water vapour pressure                @ 20°C https://en.wikipedia.org/wiki/Vapor_pressure
@@ -69,7 +69,7 @@ int main() {
     Bem::real Gamma = 7.0/5.0;            // air is a dominantly diatomic gas
               Pa = pa/p_ref;              // acoustic pressure amplitude
 
-    Bem::real duration_max = 5.0;         // seconds
+    Bem::real duration_max = 60.0;         // seconds
     
     cout << "P_ref =      " << P_ref << endl;
     cout << "Sigma =      " << Sigma << endl;
@@ -85,7 +85,7 @@ int main() {
     
     
     Bem::real dp = 0.005;
-    size_t N(2000);
+    size_t N(20000);
     
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.18;
+    Bem::real remesh_coeff = 0.1;
 
     sim.remesh(remesh_coeff);
 
@@ -133,13 +133,13 @@ int main() {
         auto end = high_resolution_clock::now();
         duration<Bem::real> dur(end-start);
         Bem::real duration = dur.count();
-        /*
+        
         if(duration > duration_max) {
             cout << "duration limit for one iteration surpassed! - ending simulation." << endl;
             N = i+1;
             break;
         }
-        */
+        
         
     }
     output << N << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << endl;
