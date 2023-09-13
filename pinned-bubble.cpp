@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 33e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=33e3_beta=0.3_rem=0.1/";
+    string folder = "pinned/f=30e3_r=128e-6_p=33e3_beta=0.1_rem=0.12/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -69,7 +69,7 @@ int main() {
     Bem::real Gamma = 7.0/5.0;            // air is a dominantly diatomic gas
               Pa = pa/p_ref;              // acoustic pressure amplitude
 
-    Bem::real duration_max = 60.0;         // seconds
+    Bem::real duration_max = 60.0*5;         // seconds
     
     cout << "P_ref =      " << P_ref << endl;
     cout << "Sigma =      " << Sigma << endl;
@@ -90,14 +90,14 @@ int main() {
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
-    sim.set_damping_factor(0.8);
+    sim.set_damping_factor(0.3);
     sim.set_minimum_element_size(0.2);
     sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.1;
+    Bem::real remesh_coeff = 0.12;
 
     sim.remesh(remesh_coeff);
 
@@ -133,6 +133,9 @@ int main() {
         auto end = high_resolution_clock::now();
         duration<Bem::real> dur(end-start);
         Bem::real duration = dur.count();
+
+        if(duration < 60.0) cout << "time for this step: " << duration << " seconds" << endl;
+        else                cout << "time for this step: " << duration/60.0 << " minutes" << endl;
         
         if(duration > duration_max) {
             cout << "duration limit for one iteration surpassed! - ending simulation." << endl;
