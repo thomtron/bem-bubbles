@@ -24,6 +24,7 @@ bool trace_mesh(Mesh const& mesh,vec3 pos,vec3 dir,vec3& result,size_t& trig_ind
 void project   (Mesh& mesh, Mesh const& other);
 void project_and_interpolate(Mesh& mesh, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
 void project_and_interpolate(Mesh& mesh, std::vector<vec3> const& vertex_normals, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
+void project_and_interpolate(Mesh& mesh, std::vector<vec3> const& vertex_normals, std::vector<real>& f_res, std::vector<real>& f_2_res, Mesh const& other, std::vector<real> const& f, std::vector<real> const& f_2);
 
 Mesh l2smooth(Mesh mesh);
 Mesh l2smooth(Mesh mesh, std::vector<size_t> const& vert_inds);

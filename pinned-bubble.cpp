@@ -27,7 +27,7 @@ Bem::real waveform(vec3 x,Bem::real t) {
 
 int main() {
     Mesh M;
-    import_ply("video-1-new.ply",M);
+    import_ply("new-video-hires.ply",M);
 
     // perfect!
 
@@ -36,8 +36,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 128e-6; // m
-    Bem::real pressure = 33e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=33e3_beta=0.1_rem=0.12/";
+    Bem::real pressure = 20e3; // Pa
+    string folder = "pinned/f=30e3_r=128e-6_p=20e3_beta=0.3_rem=0.13_new/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.12;
+    Bem::real remesh_coeff = 0.13;
 
     sim.remesh(remesh_coeff);
 
@@ -117,10 +117,10 @@ int main() {
             sim.mesh = l2smooth(sim.mesh,pot,inds);
             sim.set_phi(pot);
             cout << "smoothed" << endl;
-            if(i%12 == 0) {
+            //if(i%12 == 0) {
                 sim.remesh(remesh_coeff);
                 cout << "remeshed" << endl;
-            }
+            //}
         }
 
         //if((i-3)%12 == 0) sim.remesh(remesh_coeff); // invalidates psi- and partly phi values

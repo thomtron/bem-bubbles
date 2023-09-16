@@ -1069,6 +1069,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         positions.push_back(other.verts[i]);
         for(size_t j : verts[i])
             positions.push_back(other.verts[j]);
+
         fits[i].compute_quadratic_fit(other_normals[i],other.verts[i],positions);
     }
 
@@ -1107,6 +1108,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         // current fit. then obtain distance of point to edges -> use linear weights
         // for averaging the positions obtained through the three fits.
 
+///* temporarily out for testing purposes!
         FittingTool A,B,C;
         #pragma omp critical 
         {
@@ -1114,6 +1116,8 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
             B = fits[t.b];
             C = fits[t.c];
         }
+
+
 
         CoordSystem Sa,Sb,Sc;
         Sa = A.copy_coord_system();
@@ -1128,6 +1132,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         Pa = A.get_position(Pa.x,Pa.y);
         Pb = B.get_position(Pb.x,Pb.y);
         Pc = C.get_position(Pc.x,Pc.y);
+//*/
 
         // now we want to determine the coordinates of projected_pos
         // with respect to the usual triangle coordinates of the 
@@ -1159,7 +1164,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         q = (x1*b0 - b1*x0)/(a1*b0-a0*b1); // q and r are well defined if a and b aren't collinear
         r = (a1*x0 - a0*x1)/(a1*b0-a0*b1);
 
-        projected_pos = (1.0 - q)*Pa + (q - r)*Pb + r*Pc;
+        projected_pos = (1.0 - q)*Pa + (q - r)*Pb + r*Pc; // this one too temporarily out
 
         #pragma omp critical 
         {
@@ -1175,6 +1180,144 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
 
     f_res.clear();
     f_res = result;
+}
+
+
+void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vector<real>& f_res, vector<real>& f_2_res, Mesh const& other, vector<real> const& f, vector<real> const& f_2) {
+#ifdef VERBOSE
+    cout << "PROJECT-AND-INTERPOLATE" << endl;
+#endif
+    assert(f.size() == other.verts.size());
+    vector<real> result(mesh.verts.size());
+    vector<real> result_2(mesh.verts.size());
+
+    // normalized vertex normals
+    vector<vec3> normals = vertex_normals;
+
+    vector<vec3> new_vertices(mesh.verts.size());
+
+    // creating surface fits for each vertex of 'other'
+    vector<vec3> other_normals = generate_vertex_normals(other);
+    vector<vector<size_t>> verts = generate_neighbours(other); // alternatively generate_2_ring();
+    vector<FittingTool> fits(other.verts.size());
+    for(size_t i(0);i<other.verts.size();++i) {
+        vector<vec3> positions;
+        positions.push_back(other.verts[i]);
+        for(size_t j : verts[i])
+            positions.push_back(other.verts[j]);
+        fits[i].compute_quadratic_fit(other_normals[i],other.verts[i],positions);
+    }
+
+    omp_set_num_threads(100);
+
+    #pragma omp parallel
+    {
+
+    Mesh local_mesh,local_other;
+    vector<vec3> local_normals;
+    vector<vec3> local_other_normals;
+
+    #pragma omp critical 
+    {
+        local_mesh = mesh;
+        local_other = other;
+        local_normals = normals;
+        local_other_normals = other_normals;
+    }
+
+    size_t n(local_mesh.verts.size());
+
+    #pragma omp for
+    for(size_t i = 0;i<n;++i) {
+
+        vec3 projected_pos;
+
+        size_t index(0);
+
+        trace_mesh(local_other,local_mesh.verts[i],local_normals[i],projected_pos,index);
+
+        Triplet t = local_other.trigs[index];
+
+        // copy coord system of the three fits at the three edges.
+        // using transform, and then get_position to obtain the projection on the 
+        // current fit. then obtain distance of point to edges -> use linear weights
+        // for averaging the positions obtained through the three fits.
+
+/* temporarily out for testing purposes!
+        FittingTool A,B,C;
+        #pragma omp critical 
+        {
+            A = fits[t.a];
+            B = fits[t.b];
+            C = fits[t.c];
+        }
+
+
+
+        CoordSystem Sa,Sb,Sc;
+        Sa = A.copy_coord_system();
+        Sb = B.copy_coord_system();
+        Sc = C.copy_coord_system();
+
+        vec3 Pa,Pb,Pc;
+        Pa = Sa.transform(projected_pos);
+        Pb = Sb.transform(projected_pos);
+        Pc = Sc.transform(projected_pos);
+
+        Pa = A.get_position(Pa.x,Pa.y);
+        Pb = B.get_position(Pb.x,Pb.y);
+        Pc = C.get_position(Pc.x,Pc.y);
+*/
+
+        // now we want to determine the coordinates of projected_pos
+        // with respect to the usual triangle coordinates of the 
+        // local triangle. These coordinates are then used for the 
+        // interpolation of the scalar function and the weighting of
+        // the fitting functions.
+
+        // build local 2d coord system
+        vec3 u(local_other.verts[t.b]-local_other.verts[t.a]);
+        u.normalize();
+        vec3 v(local_other.verts[t.c]-local_other.verts[t.b]);
+        v = v - v.dot(u)*u;
+        v.normalize();
+
+        vec3 a(local_other.verts[t.b]-local_other.verts[t.a]);
+        vec3 b(local_other.verts[t.c]-local_other.verts[t.b]);
+        vec3 x(projected_pos         -local_other.verts[t.a]);
+
+        real a0,a1,b0,b1,x0,x1,q,r;
+
+        a0 = a.dot(u);
+        a1 = a.dot(v);
+        b0 = b.dot(u);
+        b1 = b.dot(v);
+        x0 = x.dot(u);
+        x1 = x.dot(v);
+
+        // q and r are the coordinates of x in local coordinates
+        q = (x1*b0 - b1*x0)/(a1*b0-a0*b1); // q and r are well defined if a and b aren't collinear
+        r = (a1*x0 - a0*x1)/(a1*b0-a0*b1);
+
+        // projected_pos = (1.0 - q)*Pa + (q - r)*Pb + r*Pc; // this one too temporarily out
+
+        #pragma omp critical 
+        {
+            new_vertices[i] = projected_pos;
+            result[i] = (1.0 - q)*f[t.a] + (q - r)*f[t.b] + r*f[t.c];
+            result_2[i] = (1.0 - q)*f_2[t.a] + (q - r)*f_2[t.b] + r*f_2[t.c];
+        }
+    }
+
+    }
+
+    mesh.verts.clear();
+    mesh.verts = new_vertices;
+
+    f_res.clear();
+    f_res = result;
+    f_2_res.clear();
+    f_2_res = result_2;
 }
 
 Mesh l2smooth(Mesh mesh,vector<size_t> const& vert_inds) {

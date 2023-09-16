@@ -70,6 +70,10 @@ void FittingTool::compute_quadratic_fit(vec3 normal, vec3 center_vertex, std::ve
     d /= double(vertices.size());
 
     size_t n(vertices.size());
+    if(n<6) {
+        //if(n<5) cerr << "Danger: less than 5 points were given to FittingTool!" << endl;
+        //else cerr << "Warning: less than 6 points were given to FittingTool!" << endl;
+    }
     MatrixXd B(n,6);
     MatrixXd W = MatrixXd::Zero(n,n);
     VectorXd zeta(n);

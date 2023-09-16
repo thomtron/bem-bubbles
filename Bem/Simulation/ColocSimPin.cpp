@@ -123,8 +123,9 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
 }
 
-constexpr real beta = 0.1;
-constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
+constexpr real beta = 0.3;
+//constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
+constexpr real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
 
 
 // costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface
@@ -313,31 +314,52 @@ void ColocSimPin::remesh(real L) {
     
     CoordVec normals = generate_vertex_normals(new_mesh);
 
-    CoordVec meshverts = new_mesh.verts;
-    relax_vertices(new_mesh); // changes vertex positions
-    CoordVec pinned(N_pin);
+    CoordVec pinned;
     for(size_t i(0);i<N_pin;++i) {
-        pinned[i] = meshverts[meshverts.size()-N_pin+i];
-        //cout << pinned[i] << endl;
+        pinned.push_back(new_mesh.verts[new_mesh.verts.size()-N_pin+i]);
+    }
+
+    relax_vertices(new_mesh); // changes vertex positions
+
+    // IMPORTANT NOTE: we assume here that the boundary of the mesh remains unchanged!
+    // dammit they get permuted of course !
+    for(size_t i(0);i<N_pin;++i) {
         new_mesh.verts.pop_back();
         normals.pop_back();
     }
 
     
-    vector<real> new_phi;
+    vector<real> new_phi,new_psi;
 
     // projecting the new vertices back on the original surface
 
-    project_and_interpolate(new_mesh,normals,new_phi, mesh, make_copy(phi));
+    project_and_interpolate(new_mesh,normals,new_phi,new_psi, mesh, make_copy(phi), make_copy(psi));
 
-    for(vec3 const& elm : pinned) {
-        new_mesh.verts.push_back(elm);
-        new_phi.push_back(0.0);
+    for(size_t i(0);i<N_pin;++i) {
+
+        // this is fucking dirty:
+        vec3 pos(pinned[i]);
+
+        size_t ind_min(mesh.verts.size()-N_pin);
+        real dist_min((mesh.verts[ind_min]-pos).norm2());
+        for(size_t j(1);j<N_pin;++j) {
+            size_t l(mesh.verts.size()-N_pin+j);
+            real dist = (mesh.verts[l]-pos).norm2();
+            if(dist < dist_min) {
+                dist_min = dist;
+                ind_min = l;
+            }
+        }
+
+        new_mesh.verts.push_back(pos);
+        new_phi.push_back(phi(ind_min));
+        new_psi.push_back(psi(ind_min));
     }
 
     mesh = new_mesh;
 
     set_phi(new_phi);
+    set_psi(new_psi);
 
     //if(mesh.check_validity()) cout << "valid." << endl;
 
