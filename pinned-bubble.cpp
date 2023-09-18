@@ -36,8 +36,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 128e-6; // m
-    Bem::real pressure = 20e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=20e3_beta=0.3_rem=0.13_new/";
+    Bem::real pressure = 10e3; // Pa
+    string folder = "pinned/f=30e3_r=128e-6_p=10e3_beta=0.3_rem=0.13_new/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -93,6 +93,7 @@ int main() {
     sim.set_damping_factor(0.3);
     sim.set_minimum_element_size(0.2);
     sim.set_maximum_element_size(0.9);
+    sim.set_x_boundary(sim.mesh);  // EXPERIMENTAL
     Bem::real V_0(sim.get_volume());
 
     ofstream output(folder+"times.csv");

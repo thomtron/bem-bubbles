@@ -585,10 +585,16 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
         Halfedge* halfedge_A = mesh.edges[k];
         Halfedge* halfedge_B = halfedge_A->twin;
 
-        if(halfedge_A->trig == HalfedgeMesh::npos or halfedge_B->trig == HalfedgeMesh::npos
-           or halfedge_A->next->trig == HalfedgeMesh::npos or halfedge_A->next->next->trig == HalfedgeMesh::npos
-           or halfedge_B->next->trig == HalfedgeMesh::npos or halfedge_B->next->next->trig == HalfedgeMesh::npos) {
+        if(halfedge_A->trig == HalfedgeMesh::npos or halfedge_B->trig == HalfedgeMesh::npos) {
+            // Here we could collapse the edge at the boundary.
+            if(halfedge_B->trig == HalfedgeMesh::npos) {
+                swap(halfedge_A,halfedge_B);
+            } // halfedge_A is at the boundary now.
 
+            
+        } else if {or halfedge_A->next->trig == HalfedgeMesh::npos or halfedge_A->next->next->trig == HalfedgeMesh::npos
+           or halfedge_B->next->trig == HalfedgeMesh::npos or halfedge_B->next->next->trig == HalfedgeMesh::npos) {
+            // DO NOTHING
         } else {
 
             real curv_0 = curvature[halfedge_A->vert];
