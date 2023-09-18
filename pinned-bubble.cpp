@@ -93,7 +93,6 @@ int main() {
     sim.set_damping_factor(0.3);
     sim.set_minimum_element_size(0.2);
     sim.set_maximum_element_size(0.9);
-    sim.set_x_boundary(sim.mesh);  // EXPERIMENTAL
     Bem::real V_0(sim.get_volume());
 
     ofstream output(folder+"times.csv");

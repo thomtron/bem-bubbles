@@ -591,8 +591,8 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
                 swap(halfedge_A,halfedge_B);
             } // halfedge_A is at the boundary now.
 
-            
-        } else if {or halfedge_A->next->trig == HalfedgeMesh::npos or halfedge_A->next->next->trig == HalfedgeMesh::npos
+
+        } else if (halfedge_A->next->trig == HalfedgeMesh::npos or halfedge_A->next->next->trig == HalfedgeMesh::npos
            or halfedge_B->next->trig == HalfedgeMesh::npos or halfedge_B->next->next->trig == HalfedgeMesh::npos) {
             // DO NOTHING
         } else {
