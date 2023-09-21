@@ -5,7 +5,7 @@ project(BEM)
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Wextra -Wpedantic)
 set(CMAKE_BUILD_TYPE Release)
-#add_compile_definitions(VERBOSE) // for more output
+#add_compile_definitions(VERBOSE) # for more output
 
 
 set(DIRECTORIES Bem/Mesh Bem/Simulation Bem/Integration)

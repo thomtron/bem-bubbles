@@ -195,78 +195,6 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 
         if(edge01->trig == HalfedgeMesh::npos or edge10->trig == HalfedgeMesh::npos) {
 
-#if TRUE==TRUE
-            if(edge10->trig == HalfedgeMesh::npos) {
-                swap(edge01,edge10);
-            } // edge01 is at the boundary.
-
-            real curv_0 = curvature[edge01->vert];
-            real curv_1 = curvature[edge10->vert];
-
-            real L_max_2 = 0.0;
-            bool zero_curv = false;
-            if(curv_0+curv_1 != 0.0) {
-                L_max_2 = multiplicator*2.0/(curv_0+curv_1);
-                L_max_2 = L_max_2*L_max_2;
-            } else zero_curv = true;
-
-            if(lengths[i] > L_max_2 and not zero_curv ) {
-
-                mesh.vpos.push_back(0.5*(mesh.vpos[edge01->vert]+mesh.vpos[edge01->next->vert]));
-                mesh.verts.push_back(edge10);
-                curvature.push_back(0.5*(curv_0+curv_1));
-                size_t new_index(mesh.verts.size()-1);
-
-                // S for straight, A, B for the two sides // _0 are from new_index outgoing Halfedges
-                size_t K(mesh.edges.size());
-                size_t M(mesh.trigs.size());
-                Halfedge* S_0 = new Halfedge;
-                Halfedge* S_1 = new Halfedge;
-                Halfedge* B_0 = new Halfedge;
-                Halfedge* B_1 = new Halfedge;
-
-                S_0->edge = K;
-                S_0->trig = HalfedgeMesh::npos;
-                S_0->next = edge01->next;
-                S_0->vert = new_index;
-                S_0->twin = S_1;
-
-                S_1->edge = K;
-                S_1->trig = M;
-                S_1->next = B_0;
-                S_1->vert = edge01->next->vert;
-                S_1->twin = S_0;
-
-                B_0->edge = K+1;
-                B_0->trig = M;
-                B_0->next = edge10->next->next;
-                B_0->vert = new_index;
-                B_0->twin = B_1;
-
-                B_1->edge = K+1;
-                B_1->trig = edge10->trig;
-                B_1->next = edge10;
-                B_1->vert = edge10->next->next->vert;
-                B_1->twin = B_0;
-
-                edge01->next = S_0;
-
-                edge10->next->next->trig = M;
-                edge10->next->next->next = S_1;
-                edge10->next->next = B_1;
-                edge10->vert = new_index;
-
-                mesh.verts[S_1->vert] = S_1;
-                mesh.trigs[edge10->trig] = edge10;
-
-
-                mesh.trigs.push_back(S_1);
-
-                mesh.edges.push_back(S_0);
-                mesh.edges.push_back(B_0);
-
-            }
-#endif
         } else {
 
             real curv_0 = curvature[edge01->vert];
@@ -277,7 +205,7 @@ void split_edges    (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
             if(curv_0+curv_1 != 0.0) {
                 L_max_2 = multiplicator*2.0/(curv_0+curv_1);
                 L_max_2 = L_max_2*L_max_2;
-            } else zero_curv = true;
+            }
 
             if(lengths[i] > L_max_2 and not zero_curv ) {
 
@@ -654,208 +582,20 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 
     for(size_t k(0);k<mesh.edges.size();++k) {
 
-        //cout << "is it happening here?" << endl;
-        //if(not mesh.check_validity()) cout << "mesh invalid!" << endl; // attentiion, takes ages!!
-        //cout << "noo" << endl;
-
         Halfedge* halfedge_A = mesh.edges[k];
         Halfedge* halfedge_B = halfedge_A->twin;
 
         if(halfedge_A->trig == HalfedgeMesh::npos or halfedge_B->trig == HalfedgeMesh::npos) {
-
-
-            // BOUNDARY CASE:
-
-#if TRUE==TRUE
-
+            // Here we could collapse the edge at the boundary.
             if(halfedge_B->trig == HalfedgeMesh::npos) {
                 swap(halfedge_A,halfedge_B);
             } // halfedge_A is at the boundary now.
 
-            real curv_0 = curvature[halfedge_A->vert];
-            real curv_1 = curvature[halfedge_B->vert];
 
-            real L_min_2 = 0.0;
-            bool zero_curv = false;
-            if(curv_0+curv_1 != 0.0) {
-                L_min_2 = multiplicator*2.0/(curv_0+curv_1);
-                L_min_2 = L_min_2*L_min_2;
-            } else zero_curv = true;
-
-            if(lengths[k] < L_min_2 or zero_curv) { // and if halfedge_A->next->next->next != halfedge_A -> won't be a problem for us
-
-                size_t vert_0 = halfedge_A->vert;
-                size_t vert_1 = halfedge_B->vert;
-
-                size_t vert_B = halfedge_B->next->next->vert;
-
-                size_t num_paths(0);
-
-                Halfedge* finder = mesh.verts[vert_0];
-                Halfedge* init = finder;
-                do {
-                    Halfedge* second = finder->next;
-                    Halfedge* second_init = second;
-                    do {
-                        if(second->next->vert == vert_1) {
-                            num_paths++;
-                        }
-                        second = second->twin->next;
-                    } while(second != second_init);
-
-                    finder = finder->twin->next;
-                } while(finder != init);
-
-                if(num_paths == 1) {
-
-                    vec3 new_pos(0.5*(mesh.vpos[vert_0] + mesh.vpos[vert_1]));
-                    vec3 old_pos(mesh.vpos[vert_1]);
-
-                    bool valid = true;
-
-                    double limit_value = 0.8;
-
-                    Halfedge* u(halfedge_A->next->twin); // same as no-boundary-case
-                    do {
-                        if(u == halfedge_B->next->next) {
-                            u = halfedge_B->next->twin;
-                            old_pos = mesh.vpos[vert_0];
-                        }
-                        vec3 a = mesh.vpos[u->vert] - mesh.vpos[u->next->next->vert];
-                        vec3 b = mesh.vpos[u->next->next->vert] - new_pos;
-                        vec3 c = mesh.vpos[u->next->next->vert] - old_pos;
-
-                        c = c.vec(a);
-                        c.normalize();
-                        b = b.vec(a);
-                        b.normalize();
-
-                        if(b.dot(c)<limit_value) valid = false;
-                        u = u->next->twin;
-
-                    } while(valid and u->trig != HalfedgeMesh::npos); // back at boundary
-
-                    Halfedge* before_A = u;
-
-                    if(valid) {
-
-                        // remove the elements
-
-                        // remove the two edges
-                        remove_edge(mesh.edges,halfedge_B->next->next->edge);
-                        remove_edge(mesh.edges,halfedge_A->edge);
-
-                        swap(lengths[halfedge_B->next->next->edge],lengths.back());
-                        lengths.pop_back();
-                        swap(lengths[halfedge_A->edge],lengths.back());
-                        lengths.pop_back();
-
-
-                        // remove the face
-                        remove_face(mesh.trigs,halfedge_B->trig);
-
-                        //cout << " number faces: " << mesh.trigs.size() << ", removed ind: " << halfedge_B->trig << endl;
-
-
-                        
-
-                        remove_vertex(mesh.verts,vert_1);
-
-                        // adjust the real vertices of the mesh
-                        mesh.vpos[vert_0] = new_pos;
-                        swap(mesh.vpos[vert_1],mesh.vpos.back());
-                        mesh.vpos.pop_back();
-
-                        // and the curvature values
-                        curvature[vert_0] = 0.5*(curv_0+curv_1);
-                        swap(curvature[vert_1],curvature.back());
-                        curvature.pop_back();
-
-                        // in case that we just swapped vert_0, adjust it here (since we use it later on)
-                        if(vert_0 == mesh.verts.size()) {
-                            vert_0 = vert_1;
-                            cout << "right now" << endl;
-                        }
-
-                        if(vert_B == mesh.verts.size()) {
-                            vert_B = vert_1;
-                            cout << "right here -B" << endl;
-                        }
-
-                        // move pointers from vert_1 to vert_0
-                        Halfedge* current = halfedge_A->next;
-                        while( current != halfedge_B) {
-                            current->vert = vert_0;
-                            current = current->twin->next;
-                        }
-
-                        // make sure that vert_0 has an halfedge index that wont be removed
-                        // the same for vert_B
-                        mesh.verts[vert_0] = halfedge_A->next;
-                        mesh.verts[vert_B] = halfedge_B->next->twin;
-
-                        // make sure that the edges of triangle B that WEREN'T removed, 
-                        // will still have a valid halfedge pointer
-                        mesh.edges[halfedge_B->next->edge] = halfedge_B->next->twin;
-
-                        before_A->next = halfedge_A->next;
-
-                        // now handle twins (before we destroy structure)
-                        halfedge_B->next->next->twin->twin = halfedge_B->next->twin;
-                        halfedge_B->next->twin->twin = halfedge_B->next->next->twin;
-                        halfedge_B->next->next->twin->edge = halfedge_B->next->edge;
-
-                        for(Halfedge*& elm : mesh.bounds) {
-                            if(elm == halfedge_A) {
-                                elm = halfedge_A->next;
-                            }
-                        }
-
-                        // finally remove the halfedges
-
-                        delete halfedge_A;
-
-                        delete halfedge_B->next->next;
-                        delete halfedge_B->next;
-                        delete halfedge_B;
-
-                        // adjust lengths
-
-                        Halfedge* half_0 = mesh.verts[vert_0];
-                        current = half_0;
-                        do {
-                            lengths[current->edge] = (mesh.vpos[current->next->vert]-mesh.vpos[current->vert]).norm2();
-                            current = current->twin->next;
-                        } while( current != half_0);
-
-                        /*
-                        size_t num_bound(0);
-                        current = half_0;
-                        do {
-                            num_bound++;
-                            Halfedge* mini = current;
-                            size_t valence(0);
-                            do {
-                                valence++;
-                                mini = mini->twin->next;
-                                if(mini->vert != current->vert) cout << "x_";
-                            } while(mini != current);
-                            cout << valence << '_';
-
-                            current = current->next;
-                        } while(current != half_0);
-                        */
-                        
-                        k = 0;
-                    }
-                }
-            }
-#endif
         } else if (halfedge_A->next->trig == HalfedgeMesh::npos or halfedge_A->next->next->trig == HalfedgeMesh::npos
            or halfedge_B->next->trig == HalfedgeMesh::npos or halfedge_B->next->next->trig == HalfedgeMesh::npos) {
             // DO NOTHING
         } else {
-            
 
             real curv_0 = curvature[halfedge_A->vert];
             real curv_1 = curvature[halfedge_B->vert];
@@ -865,9 +605,12 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
             if(curv_0+curv_1 != 0.0) {
                 L_min_2 = multiplicator*2.0/(curv_0+curv_1);
                 L_min_2 = L_min_2*L_min_2;
-            } else zero_curv = true;
+            }
 
             if(lengths[k] < L_min_2 or zero_curv) {
+
+                Halfedge* halfedge_A = mesh.edges[k];
+                Halfedge* halfedge_B = halfedge_A->twin;
 
                 size_t vert_0 = halfedge_A->vert;
                 size_t vert_1 = halfedge_B->vert;
@@ -926,7 +669,6 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 
 
                         if(valid) {
-                            //cout << '.';
 
                             // remove the elements
 
@@ -947,6 +689,13 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
                             remove_face(mesh.trigs,halfedge_A->trig);
                             remove_face(mesh.trigs,halfedge_B->trig);
 
+
+                            // make sure that vert_0 has an halfedge index that wont be removed
+                            // the same for vert_A and vert_B
+                            mesh.verts[vert_0] = halfedge_A->next->next->twin;
+                            mesh.verts[vert_A] = halfedge_A->next->twin;
+                            mesh.verts[vert_B] = halfedge_B->next->twin;
+
                             remove_vertex(mesh.verts,vert_1);
 
                             // adjust the real vertices of the mesh
@@ -960,20 +709,7 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
                             curvature.pop_back();
 
                             // in case that we just swapped vert_0, adjust it here (since we use it later on)
-                            if(vert_0 == mesh.verts.size()) {
-                                vert_0 = vert_1;
-                                cout << "right here" << endl;
-                            }
-
-                            if(vert_A == mesh.verts.size()) {
-                                vert_A = vert_1;
-                                cout << "right here -A" << endl;
-                            }
-
-                            if(vert_B == mesh.verts.size()) {
-                                vert_B = vert_1;
-                                cout << "right here -B" << endl;
-                            }
+                            if(vert_0 == mesh.verts.size()) vert_0 = vert_1;
 
                             // move pointers from vert_1 to vert_0
                             Halfedge* current = halfedge_A->next;
@@ -981,12 +717,6 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
                                 current->vert = vert_0;
                                 current = current->twin->next;
                             }
-
-                            // make sure that vert_0 has an halfedge index that wont be removed
-                            // the same for vert_A and vert_B
-                            mesh.verts[vert_0] = halfedge_A->next->next->twin;
-                            mesh.verts[vert_A] = halfedge_A->next->twin;
-                            mesh.verts[vert_B] = halfedge_B->next->twin;
 
                             // make sure that the edges of triangle A and B that WEREN'T removed, 
                             // will still have a valid halfedge pointer
@@ -1039,15 +769,9 @@ void collapse_edges (HalfedgeMesh& mesh, vector<real>& curvature, real multiplic
 
 // Here are some useful helper functions for the flip_edges function
 
-int valence_cost(int valence,bool boundary = false) {
-    if(boundary) {
-        int diff(valence - 4); // 6 is the optimal valence number
-        return diff*diff;
-    } else {
-        int diff(valence - 6); // 6 is the optimal valence number
-        return diff*diff;
-    }
-    
+int valence_cost(int valence) {
+    int diff(valence - 6); // 6 is the optimal valence number
+    return diff*diff;
 }
 
 vec3 cross_vec(vec3 const& a,vec3 const& b,vec3 const& c) {
@@ -1087,7 +811,7 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
         Halfedge* halfedge_B = halfedge_A->twin;
 
         if(halfedge_A->trig == HalfedgeMesh::npos or halfedge_B->trig == HalfedgeMesh::npos) {
-            // DO NOTHING
+
         } else {
 
             size_t vert_0 = halfedge_A->vert;
@@ -1104,20 +828,15 @@ void flip_edges     (HalfedgeMesh& mesh, size_t state) {
                 int cost = 0;
                 int cost_flip = 0;
 
-                bool b0 = at_boundary(mesh.verts[vert_0]);
-                bool b1 = at_boundary(mesh.verts[vert_1]);
-                bool bA = at_boundary(mesh.verts[vert_A]);
-                bool bB = at_boundary(mesh.verts[vert_B]);
+                cost += valence_cost(valences[vert_0]);
+                cost += valence_cost(valences[vert_1]);
+                cost += valence_cost(valences[vert_A]);
+                cost += valence_cost(valences[vert_B]);
 
-                cost += valence_cost(valences[vert_0],b0);
-                cost += valence_cost(valences[vert_1],b1);
-                cost += valence_cost(valences[vert_A],bA);
-                cost += valence_cost(valences[vert_B],bB);
-
-                cost_flip += valence_cost(valences[vert_0]-1,b0); // it is safe to subtract one here
-                cost_flip += valence_cost(valences[vert_1]-1,b1);
-                cost_flip += valence_cost(valences[vert_A]+1,bA);
-                cost_flip += valence_cost(valences[vert_B]+1,bB);
+                cost_flip += valence_cost(valences[vert_0]-1); // it is safe to subtract one here
+                cost_flip += valence_cost(valences[vert_1]-1);
+                cost_flip += valence_cost(valences[vert_A]+1);
+                cost_flip += valence_cost(valences[vert_B]+1);
 
 
                 // check new and old lengths:

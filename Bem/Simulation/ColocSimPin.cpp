@@ -265,36 +265,76 @@ void ColocSimPin::remesh(real L) {
             elm = max(min(elm,1.0/min_elm_size),1.0/max_elm_size);
     }
     
-    HalfedgeMesh manip;
-    generate_halfedges(manip,mesh);
-    
-    //if(mesh.check_validity()) cout << "valid." << endl;
+    HalfedgeMesh manip(mesh);
 
+    // copy doesn't work properly right now!! there are still some errors to be solved!
+    HalfedgeMesh orig_h(mesh);
+    vector<size_t> perm;
+    Halfedge* start = orig_h.bounds[0];
+    Halfedge* curr = start;
+    do {
+        vec3 pos = orig_h.vpos[curr->vert];
+        size_t ind_min(mesh.verts.size()-N_pin);
+        real dist_min((mesh.verts[ind_min]-pos).norm2());
+        for(size_t j(1);j<N_pin;++j) {
+            size_t l(mesh.verts.size()-N_pin+j);
+            real dist = (mesh.verts[l]-pos).norm2();
+            if(dist < dist_min) {
+                dist_min = dist;
+                ind_min = l;
+            }
+        }
+
+        perm.push_back(ind_min);
+        
+        curr = curr->next;
+
+    } while (curr != start);
+    cout << "did i survive so far?a" << endl;
+    
+    if(mesh.check_validity()) cout << "valid." << endl;
+
+    //export_ply("before_split.ply",generate_mesh(manip));
+    
     split_edges(manip,curvature_params,L*4.0/3.0);
+    //export_ply("after_split.ply",generate_mesh(manip));
+    //if(manip.check_validity()) cout << "valid." << endl;
+    //generate_halfedges(manip,generate_mesh(manip));
     collapse_edges(manip,curvature_params,L*4.0/5.0);
+    //export_ply("last_valid.ply",generate_mesh(manip));
+    //if(manip.check_validity()) cout << "valid." << endl;
+    //else throw;
     flip_edges(manip,1);
     flip_edges(manip,1);
     //split_edges(manip,curvature_params,L*4.0/3.0);
     collapse_edges(manip,curvature_params,L*4.0/5.0);
+    //export_ply("prob_invalid.ply",generate_mesh(manip));
+    //if(manip.check_validity()) cout << "valid." << endl;
     flip_edges(manip,1);
     flip_edges(manip,1);
+    //if(manip.check_validity()) cout << "valid." << endl;
     //split_edges(manip,curvature_params,L*4.0/3.0);
     collapse_edges(manip,curvature_params,L*4.0/5.0);
     flip_edges(manip,1);
     flip_edges(manip,1);
+
+    cout << "did i survive so far?ab" << endl;
 
     Mesh new_mesh = generate_mesh(manip);
+
+    cout << "did i survive so far?b" << endl;
 
     // determine the vertices that are on the loop:
 
     Halfedge* bound = manip.bounds[0];
     Halfedge* u(bound);
-    //size_t i(0);
+    size_t n_b(0);
     vector<bool> bounds(manip.verts.size(),false);
     do {
         //cout << u->vert << ", " << i++ << endl;
         bounds[u->vert] = true;
         u = u->next;
+        n_b++;
     } while(u != bound);
 
     rearrange_boundary(new_mesh,bounds);
@@ -308,15 +348,19 @@ void ColocSimPin::remesh(real L) {
 
     //size_t num = set_x_boundary(new_mesh); // mixes arrays up!
 
-    assert(bound_inds.size() == N_pin);
+    N_pin = n_b;
 
-
+    cout << "did i survive so far?c" << endl;
     
     CoordVec normals = generate_vertex_normals(new_mesh);
 
-    CoordVec pinned;
+    CoordVec pinned,pinnednormals;
     for(size_t i(0);i<N_pin;++i) {
         pinned.push_back(new_mesh.verts[new_mesh.verts.size()-N_pin+i]);
+        vec3 normal = normals[new_mesh.verts.size()-N_pin+i];
+        normal.x = 0.0;
+        normal.normalize();
+        pinnednormals.push_back(normal);
     }
 
     relax_vertices(new_mesh); // changes vertex positions
@@ -335,25 +379,48 @@ void ColocSimPin::remesh(real L) {
 
     project_and_interpolate(new_mesh,normals,new_phi,new_psi, mesh, make_copy(phi), make_copy(psi));
 
+    cout << "did i survive so far?d" << endl;
+
     for(size_t i(0);i<N_pin;++i) {
 
-        // this is fucking dirty:
+        // project the pinned ones too on to the old ring
         vec3 pos(pinned[i]);
+        vec3 nor(pinnednormals[i]);
 
-        size_t ind_min(mesh.verts.size()-N_pin);
-        real dist_min((mesh.verts[ind_min]-pos).norm2());
-        for(size_t j(1);j<N_pin;++j) {
-            size_t l(mesh.verts.size()-N_pin+j);
-            real dist = (mesh.verts[l]-pos).norm2();
-            if(dist < dist_min) {
-                dist_min = dist;
-                ind_min = l;
+        real s_min = 0.0;
+        real t_min = 0.0;
+        size_t ind_min = 0;
+        
+        bool first(true);
+        size_t kp(perm.size());
+        for(size_t j(0);j<kp;j++) {
+            vec3 k = mesh.verts[perm[(j+1)%kp]] - mesh.verts[perm[j]]; // boundary element vector
+            vec3 O = mesh.verts[perm[j]] - pos;
+
+            real t = (O.vec(nor)).x/(nor.vec(k)).x;
+            real s = nor.dot(O + t*k)/nor.norm2();
+
+            if(abs(t) <= 1.0) {
+                // ray is intersecting current line segment of boundary
+                if(first or (abs(s) < abs(s_min))) {
+                    first = false;
+                    s_min = s;
+                    t_min = t;
+                    ind_min = j;
+                }
             }
         }
+        if(first) throw("project_and_interpolate: no intersection at boundary");
+
+        pos += s_min*nor;
+
+        real phi_int = t_min*phi(ind_min) + (1.0-t_min)*phi((ind_min+1)%kp);
+        real psi_int = t_min*psi(ind_min) + (1.0-t_min)*psi((ind_min+1)%kp);
+        
 
         new_mesh.verts.push_back(pos);
-        new_phi.push_back(phi(ind_min));
-        new_psi.push_back(psi(ind_min));
+        new_phi.push_back(phi_int);
+        new_psi.push_back(psi_int);
     }
 
     mesh = new_mesh;

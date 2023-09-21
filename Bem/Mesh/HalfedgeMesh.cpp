@@ -54,7 +54,6 @@ void HalfedgeMesh::copy(HalfedgeMesh const& other) {
     verts = vector<Halfedge*>(other.verts.size(),nullptr);
     edges = vector<Halfedge*>(other.edges.size(),nullptr);
     trigs = vector<Halfedge*>(other.trigs.size(),nullptr);
-    bounds = vector<Halfedge*>(other.bounds.size(),nullptr);
     for(Halfedge* elm : other.edges) {
         if(elm->trig == npos) { // if at boundary
             Halfedge* A = new Halfedge;
@@ -102,6 +101,23 @@ void HalfedgeMesh::copy(HalfedgeMesh const& other) {
         A->next = B;
         B->next = C;
         C->next = A;
+    }
+    for(Halfedge* elm : other.bounds) {
+        Halfedge* half = edges[elm->edge];
+        if(half->twin->trig == HalfedgeMesh::npos) half = half->twin;
+        bounds.push_back(half);
+
+        Halfedge* start = half->twin;
+        Halfedge* curr = start;
+        Halfedge* curr_before = half;
+        do {
+            curr = curr->next->twin;
+            if(curr->trig == HalfedgeMesh::npos) {
+                curr->next = curr_before;
+                curr_before = curr;
+                curr = curr->twin;
+            } 
+        } while(curr != start);
     }
 }
 
@@ -284,16 +300,20 @@ bool HalfedgeMesh::check_validity() const {
     size_t error_vertind(0);
     size_t error_valence(0);
 
+    //cout << "a" << endl;
+
     for(Halfedge* elm : trigs) {
         if(elm->next->next->next != elm) error_nnn++;           // check that next-pointers connect correctly
         if(elm->next->trig != elm->trig) error_trigind++;       // check that halfedges point to same triangle
         if(elm->next->next->trig != elm->trig) error_trigind++; // -^
     }
+    //cout << "b" << endl;
     for(Halfedge* elm : edges) {
         if(elm->twin->twin != elm) error_tt++;                  // check that twin of twin is element itself
         if(edges[elm->edge] != elm) error_edgeind++;       // check that edge indices are correct
         if(edges[elm->twin->edge] != elm) error_edgeind++; // check that edge indices are correct
     }
+    //cout << "c" << endl;
 
 
     // the following 18 lines are for checking that the valence number computed by two different methods are consistent
@@ -304,6 +324,7 @@ bool HalfedgeMesh::check_validity() const {
         valences[elm->next->vert]++;
         valences[elm->next->next->vert]++;
     }
+    //cout << "d" << endl;
 
     // add one for all vertices at boundaries
     for(Halfedge* elm : bounds) {
@@ -313,15 +334,18 @@ bool HalfedgeMesh::check_validity() const {
             u = u->next; // slide along boundary
         } while(u != elm);
     }
+    //cout << "e" << endl;
 
+    size_t i(0);
     for(Halfedge* elm : verts) {
+        i++;
         Halfedge* u(elm);
         size_t valence = 0;
         do {
             valence++;
             if(u->vert != elm->vert) {
                 error_vertind++;
-                if(at_boundary_u(verts[u->vert])) cout << "boundary" << endl;
+                if(at_boundary_u(verts[u->vert])) cout << "boundary: " << i << "/" << verts.size() << endl;
             } 
             u = u->twin->next;
         } while(u != elm);
@@ -330,6 +354,7 @@ bool HalfedgeMesh::check_validity() const {
             cout << valence << " -%- " << valences[elm->vert] << endl;
         } 
     }
+    //cout << "f" << endl;
 
 
 //#ifdef VERBOSE
