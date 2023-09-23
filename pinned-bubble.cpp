@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 20e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=20e3_beta=0.3_rem=0.2_new_rem/";
+    string folder = "pinned/f=30e3_r=128e-6_p=20e3_beta=1.0_rem=0.15_epsilon/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -100,6 +100,7 @@ int main() {
     Bem::real remesh_coeff = 0.15;
 
     sim.remesh(remesh_coeff);
+    //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
 
     size_t substeps = 4;
     for(size_t i(0);i<N;++i){

@@ -19,6 +19,8 @@ using namespace std;
 using namespace chrono;
 #endif
 
+#define NOPENETRATION
+
 namespace Bem {
 
 CoordVec LinLinSim::position_t(Mesh const& m,PotVec& pot) const {
@@ -184,6 +186,7 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     
     CoordVec average = (k1_x + 2.0*k2_x + 2.0*k3_x + k4_x)*(1.0/6.0);
 
+
     // set a value for psi for export and for guess in solver (this is optional)
     vector<vec3> normals = generate_vertex_normals(mesh);
     psi = Eigen::VectorXd(average.size());
@@ -192,6 +195,21 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     }
 
     CoordVec xf = x1 + dt*average;
+
+
+#ifdef NOPENETRATION
+    real eps = 1e-2;
+    for(size_t i(0);i<x1.size();++i) {
+        real cx = average[i].x;
+        if(cx < 0.0) { // only if point may penetrate wall
+            real t_e = (eps - x1[i].x)/cx;
+            if(t_e < dt) { // if particle passed epsilon-line
+                xf[i].x = eps*exp(cx/eps*(dt - t_e)); // set it to exponential function
+                cout << "applied exponential.                   flag:  ////////" << endl;
+            }
+        }
+    }
+#endif
 
     PotVec pf = p1 + (dt/6.0)*(pot_t_multi(mesh,k1_x,time) + 2.0*pot_t_multi(m2,k2_x,time) + 2.0*pot_t_multi(m3,k3_x,time) + pot_t_multi(m4,k4_x,time));
     mesh.verts = xf;

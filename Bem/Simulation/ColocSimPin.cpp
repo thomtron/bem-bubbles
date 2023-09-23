@@ -123,9 +123,9 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
 }
 
-constexpr real beta = 0.3;
+const real beta = 1.0;
 //constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
-constexpr real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
+const real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
 
 
 // costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface
@@ -290,9 +290,9 @@ void ColocSimPin::remesh(real L) {
         curr = curr->next;
 
     } while (curr != start);
-    cout << "did i survive so far?a" << endl;
+    //cout << "did i survive so far?a" << endl;
     
-    if(mesh.check_validity()) cout << "valid." << endl;
+    //if(mesh.check_validity()) cout << "valid." << endl;
 
     //export_ply("before_split.ply",generate_mesh(manip));
     
@@ -318,11 +318,11 @@ void ColocSimPin::remesh(real L) {
     flip_edges(manip,1);
     flip_edges(manip,1);
 
-    cout << "did i survive so far?ab" << endl;
+    //cout << "did i survive so far?ab" << endl;
 
     Mesh new_mesh = generate_mesh(manip);
 
-    cout << "did i survive so far?b" << endl;
+    //cout << "did i survive so far?b" << endl;
 
     // determine the vertices that are on the loop:
 
@@ -350,7 +350,7 @@ void ColocSimPin::remesh(real L) {
 
     N_pin = n_b;
 
-    cout << "did i survive so far?c" << endl;
+    //cout << "did i survive so far?c" << endl;
     
     CoordVec normals = generate_vertex_normals(new_mesh);
 
@@ -379,7 +379,7 @@ void ColocSimPin::remesh(real L) {
 
     project_and_interpolate(new_mesh,normals,new_phi,new_psi, mesh, make_copy(phi), make_copy(psi));
 
-    cout << "did i survive so far?d" << endl;
+    //cout << "did i survive so far?d" << endl;
 
     for(size_t i(0);i<N_pin;++i) {
 
