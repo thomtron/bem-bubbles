@@ -191,7 +191,7 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
 
 
 #ifdef NOPENETRATION
-    real eps = 1e-3;
+    real eps = 1e-2;
     size_t nb(0);
     for(size_t i(0);i<x1.size();++i) {
         real cx = average[i].x;
