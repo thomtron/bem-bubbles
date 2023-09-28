@@ -224,6 +224,7 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
             }*/
         }
     }
+    if(nb > 0) cout << "applied exponential " << nb << " times.      ##" << endl;
 #endif
 
     PotVec pf = p1 + (dt/6.0)*(pot_t_multi(mesh,k1_x,time) + 2.0*pot_t_multi(m2,k2_x,time) + 2.0*pot_t_multi(m3,k3_x,time) + pot_t_multi(m4,k4_x,time));
