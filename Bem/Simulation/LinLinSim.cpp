@@ -187,32 +187,55 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     CoordVec average = (k1_x + 2.0*k2_x + 2.0*k3_x + k4_x)*(1.0/6.0);
 
 
-    // set a value for psi for export and for guess in solver (this is optional)
-    vector<vec3> normals = generate_vertex_normals(mesh);
-    psi = Eigen::VectorXd(average.size());
-    for(size_t i(0);i<average.size();++i) {
-        psi(i) = average[i].dot(normals[i]);
-    }
-
     CoordVec xf = x1 + dt*average;
 
 
 #ifdef NOPENETRATION
-    real eps = 1e-2;
+    real eps = 1e-3;
+    size_t nb(0);
     for(size_t i(0);i<x1.size();++i) {
         real cx = average[i].x;
-        if(cx < 0.0) { // only if point may penetrate wall
-            real t_e = (eps - x1[i].x)/cx;
-            if(t_e < dt) { // if particle passed epsilon-line
+        if(cx*dt < 0.0) { // only if point may penetrate wall
+            bool flag = false;
+            real x0 = x1[i].x;
+            if(x0 < eps) {
+                xf[i].x = x0*exp(cx/x0*dt);
+                flag = true;
+            } else {
+                real t_e = (eps - x1[i].x)/cx;
+                if(abs(t_e) < abs(dt)) { // if particle would pass epsilon-line
+                    xf[i].x = eps*exp(cx/eps*(dt - t_e));
+                    flag = true;
+                }
+            }
+
+            if(flag) {
+                average[i].x = (xf[i].x - x0)/dt; // update the velocity for the psi-calculation
+                nb ++;
+            }
+
+            /*
+            if(t_e < 0.0) { // if x1.x < eps
+                xf[i].x = x1[i].x*exp(cx/x1[i].x*dt);
+            } 
+            else if(t_e < dt) { // if particle passed epsilon-line
                 xf[i].x = eps*exp(cx/eps*(dt - t_e)); // set it to exponential function
                 cout << "applied exponential.                   flag:  ////////" << endl;
-            }
+            }*/
         }
     }
 #endif
 
     PotVec pf = p1 + (dt/6.0)*(pot_t_multi(mesh,k1_x,time) + 2.0*pot_t_multi(m2,k2_x,time) + 2.0*pot_t_multi(m3,k3_x,time) + pot_t_multi(m4,k4_x,time));
     mesh.verts = xf;
+
+    // set a value for psi (after we updated mesh)
+    vector<vec3> normals = generate_vertex_normals(mesh);
+    for(size_t i(0);i<average.size();++i) {
+        psi(i) = average[i].dot(normals[i]);
+    }
+
+    // update phi
     set_phi(pf);
     time += dt;
 }
