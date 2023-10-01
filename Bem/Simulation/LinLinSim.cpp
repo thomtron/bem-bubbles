@@ -295,9 +295,27 @@ vector<real> LinLinSim::curvature_param() const {
     // curvature but also on the gradients of phi on the mesh. Since we 
     // haven't found yet the best fitting method, we do not include it in
     // this version. Such adaptions are still subject of experimentation.
-    /*
+    
     vector<vec3> tangrad = generate_tangent_gradients(mesh,make_copy(phi));
 
+    vector<real> phi_sampling_coeff(mesh.verts.size(),0.0);
+    vector<real> num(mesh.verts.size(),0.0);
+    for(size_t i(0); i<mesh.trigs.size();++i) {
+        Triplet t(mesh.trigs[i]);
+        real norm2 = tangrad[i].norm2();
+        phi_sampling_coeff[t.a] += norm2; num[t.a]++;
+        phi_sampling_coeff[t.b] += norm2; num[t.b]++;
+        phi_sampling_coeff[t.c] += norm2; num[t.c]++;
+    }
+
+    real phi_sampling_factor = 0.1;
+
+    for(size_t i(0);i<phi_sampling_coeff.size();++i) {
+        phi_sampling_coeff[i] = sqrt(1.0 + phi_sampling_coeff[i]/num[i])/phi_sampling_factor;
+        max_curv[i] = max(max_curv[i],phi_sampling_coeff[i]);
+    }
+
+    /*
     vector<vector<size_t>> trig_inds = generate_triangle_indices(mesh);
     vector<real> meandiffgrad(mesh.verts.size());
     for(size_t i(0);i<trig_inds.size();++i){

@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 15e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=15e3_beta=0.1_rem=0.125_epsilon=1e-3/";
+    string folder = "pinned/f=30e3_r=128e-6_p=15e3_beta=0.1_rem=0.15_epsilon=1e-2/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -84,8 +84,8 @@ int main() {
 
     
     
-    Bem::real dp = 0.0025;
-    size_t N(20000);
+    Bem::real dp = 0.005;
+    size_t N(10000);
     
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.125;
+    Bem::real remesh_coeff = 0.15;
 
     sim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
