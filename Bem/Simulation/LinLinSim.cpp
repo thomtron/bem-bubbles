@@ -231,10 +231,13 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     mesh.verts = xf;
 
     // set a value for psi (after we updated mesh)
+    if(psi.size() != average.size()) cout << "psi: " << psi.size() << " - new-psi: " << average.size() << "          XXXXX" << endl; 
+    PotVec new_psi(average.size());
     vector<vec3> normals = generate_vertex_normals(mesh);
     for(size_t i(0);i<average.size();++i) {
-        psi(i) = average[i].dot(normals[i]);
+        new_psi[i] = average[i].dot(normals[i]);
     }
+    set_psi(new_psi);
 
     // update phi
     set_phi(pf);
@@ -308,7 +311,7 @@ vector<real> LinLinSim::curvature_param() const {
         phi_sampling_coeff[t.c] += norm2; num[t.c]++;
     }
 
-    real phi_sampling_factor = 0.1;
+    real phi_sampling_factor = 1.0;
 
     for(size_t i(0);i<phi_sampling_coeff.size();++i) {
         phi_sampling_coeff[i] = sqrt(1.0 + phi_sampling_coeff[i]/num[i])/phi_sampling_factor;

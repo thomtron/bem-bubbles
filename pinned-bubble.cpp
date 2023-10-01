@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 15e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=15e3_beta=0.1_rem=0.15_epsilon=1e-2/";
+    string folder = "pinned/f=30e3_r=128e-6_p=15e3_beta=0.1_rem=0.15_epsilon=1e-2-phi_rem/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
