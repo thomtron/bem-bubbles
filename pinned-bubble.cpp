@@ -27,7 +27,7 @@ Bem::real waveform(vec3 x,Bem::real t) {
 
 int main() {
     Mesh M;
-    import_ply("new-video-hires.ply",M);
+    import_ply("../init_conditions/init-pinned.ply",M);
 
     // perfect!
 

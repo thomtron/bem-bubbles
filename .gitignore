@@ -49,6 +49,7 @@ build
 
 # models
 *.ply
+!init_conditions/*.ply
 
 # many .csv's
 *.csv
