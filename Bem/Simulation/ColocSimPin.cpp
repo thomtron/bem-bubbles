@@ -381,11 +381,64 @@ void ColocSimPin::remesh(real L) {
 
     //cout << "did i survive so far?d" << endl;
 
+
+    vector<vec3> manip_norms = generate_vertex_normals(manip);
+
+    Halfedge* ha = bound;
+
+    vec3 old2(manip.vpos[ha->vert]);
+    ha = ha->next;
+    vec3 old(manip.vpos[ha->vert]);
+    ha = ha->next;
+    vec3 cur(manip.vpos[ha->vert]);
+
+    Halfedge* hb = ha;
+    do {
+
+        vec3 nor = manip_norms[ha->vert];
+        nor.x = 0.0;
+        nor.normalize();
+
+        ha = ha->next;
+        old2 = old;
+        old = cur;
+        cur = manip.vpos[ha->vert];
+
+        vec3 nor_a = (cur - old).vec(vec3(1,0,0));
+        vec3 nor_b = (old - old2).vec(vec3(1,0,0));
+        nor_a.normalize();
+        nor_b.normalize();
+
+        vec3 nor_o = nor_a + nor_b;
+        nor_o.normalize();
+
+        
+
+        real val = (nor_o + nor).norm();
+        if(val > 0.1) {
+            cout << "val = " << val << ", nor = " << nor << ", nor_o = " << nor_o << endl; 
+        }
+        
+    } while(ha != hb);
+
     for(size_t i(0);i<N_pin;++i) {
 
         // project the pinned ones too on to the old ring
         vec3 pos(pinned[i]);
         vec3 nor(pinnednormals[i]);
+
+        /*
+
+        vec3 nor_a = (new_mesh.verts[perm[(i+1)%kp]] - new_mesh.verts[perm[i]]).vec(vec3(1,0,0));
+        vec3 nor_b = (new_mesh.verts[perm[i]] - new_mesh.verts[perm[(i-1)%kp]]).vec(vec3(1,0,0));
+        nor_a.normalize();
+        nor_b.normalize();
+
+        vec3 nor_o = nor_a + nor_b;
+        nor_o.normalize();
+
+        cout << (nor_o - nor).norm() << ", nor = " << nor << ", nor_o = " << nor_o << endl;
+        */
 
         real s_min = 0.0;
         real t_min = 0.0;
@@ -410,7 +463,7 @@ void ColocSimPin::remesh(real L) {
                 }
             }
         }
-        if(first) throw("project_and_interpolate: no intersection at boundary");
+        if(first) throw(out_of_range("project_and_interpolate: no intersection at boundary"));
 
         pos += s_min*nor;
 

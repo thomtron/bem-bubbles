@@ -56,6 +56,8 @@ void generate_halfedges(HalfedgeMesh& result, Mesh const& mesh);
 Mesh generate_mesh(HalfedgeMesh const& mesh);
 void generate_mesh(Mesh& result, HalfedgeMesh const& mesh);
 
+std::vector<vec3> generate_vertex_normals(HalfedgeMesh const& mesh);
+
 } // namespace Bem
 
 #endif // HALFEDGEMESH_HPP

@@ -375,5 +375,28 @@ bool HalfedgeMesh::check_validity() const {
 }
 
 
+vector<vec3> generate_vertex_normals(HalfedgeMesh const& mesh) {
+    vector<vec3> vertex_normals;
+
+    size_t n(mesh.verts.size());
+
+    for(size_t i(0);i<n;++i) {
+        vec3 normal;
+        Halfedge* u(mesh.verts[i]);
+        Halfedge* v(u);
+        do {
+            vec3 B(mesh.vpos[u->next->vert]-mesh.vpos[u->vert]);
+            vec3 C(mesh.vpos[u->next->next->vert]-mesh.vpos[u->vert]);
+            normal += B.vec(C)*(1.0/(B.norm2()*C.norm2()));
+
+
+            u = u->twin->next;
+        } while(u != v);
+        normal.normalize();
+        vertex_normals.push_back(normal);
+    }
+    return vertex_normals;
+}
+
 
 } // namespace Bem
