@@ -450,7 +450,8 @@ void ColocSimPin::remesh(real L) {
 
         // project the pinned ones too on to the old ring
         vec3 pos(pinned[i]);
-        vec3 nor(pinnednormals[i]);
+        //vec3 nor(pinnednormals[i]);
+        vec3 nor(better_norms[i]);
 
         /*
 
