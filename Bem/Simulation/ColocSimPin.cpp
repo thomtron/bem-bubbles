@@ -338,6 +338,8 @@ void ColocSimPin::remesh(real L) {
     } while(u != bound);
 
     rearrange_boundary(new_mesh,bounds);
+
+    Mesh new_mesh_II(new_mesh);
     //cout << (new_mesh.check_validity() ? "valid" : "bad") << endl;
 
     //if(manip.check_validity()) cout << "halfedgemesh valid. 0" << endl;
@@ -383,6 +385,7 @@ void ColocSimPin::remesh(real L) {
 
 
     vector<vec3> manip_norms = generate_vertex_normals(manip);
+    vector<vec3> better_norms(N_pin);
 
     Halfedge* ha = bound;
 
@@ -395,7 +398,25 @@ void ColocSimPin::remesh(real L) {
     Halfedge* hb = ha;
     do {
 
+        // get permutation:
+
+        vec3 pos = manip.vpos[ha->vert];
+        size_t ind_min(0);
+        real dist_min((new_mesh_II.verts[new_mesh_II.verts.size()-N_pin]-pos).norm2());
+        for(size_t j(1);j<N_pin;++j) {
+            size_t l(new_mesh_II.verts.size()-N_pin+j);
+            real dist = (new_mesh_II.verts[l]-pos).norm2();
+            if(dist < dist_min) {
+                dist_min = dist;
+                ind_min = j;
+            }
+        }
+        //cout << ind_min << "  " << dist_min << endl;
+
+        // done
+
         vec3 nor = manip_norms[ha->vert];
+        vec3 nor_orig = nor;
         nor.x = 0.0;
         nor.normalize();
 
@@ -412,9 +433,13 @@ void ColocSimPin::remesh(real L) {
         vec3 nor_o = nor_a + nor_b;
         nor_o.normalize();
 
-        
+        if(nor_o.dot(nor_orig)<0.0) {
+            nor_o = -nor_o;
+        }
 
-        real val = (nor_o + nor).norm();
+        better_norms[ind_min] = nor_o;
+
+        real val = (nor_o - nor).norm();
         if(val > 0.1) {
             cout << "val = " << val << ", nor = " << nor << ", nor_o = " << nor_o << endl; 
         }
