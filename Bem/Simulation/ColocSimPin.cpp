@@ -476,7 +476,6 @@ void ColocSimPin::remesh(real L) {
         
         bool first(true);
         size_t kp(perm.size());
-        vec3 pos_a,pos_b;
         for(size_t j(0);j<kp;j++) {
             vec3 k = mesh.verts[perm[(j+1)%kp]] - mesh.verts[perm[j]]; // boundary element vector
             vec3 O = mesh.verts[perm[j]] - pos;
@@ -484,19 +483,21 @@ void ColocSimPin::remesh(real L) {
             real t = (O.vec(nor)).x/(nor.vec(k)).x;
             real s = nor.dot(O + t*k)/nor.norm2();
 
-            if(abs(t) <= 1.0) {
+            if(t >= 0.0 and t < 1.0) {
                 // ray is intersecting current line segment of boundary
                 if(first or (abs(s) < abs(s_min))) {
                     first = false;
                     s_min = s;
                     t_min = t;
                     ind_min = j;
-                    pos_a = mesh.verts[perm[j]];
-                    pos_b = mesh.verts[perm[(j+1)%kp]];
                 }
             }
         }
         if(first) throw(out_of_range("project_and_interpolate: no intersection at boundary"));
+
+
+        vec3 pos_a = mesh.verts[perm[ind_min]];
+        vec3 pos_b = mesh.verts[perm[(ind_min+1)%kp]];
 
         vec3 old_pos = pos - nor*0.2;
 
@@ -510,6 +511,8 @@ void ColocSimPin::remesh(real L) {
         borderprojects.trigs.push_back(Triplet(trigind_offset,trigind_offset+1,trigind_offset+2));
         borderprojects.trigs.push_back(Triplet(trigind_offset,trigind_offset+2,trigind_offset+3));
         trigind_offset += 4;
+
+        //t_min = 1.0 - t_min;
 
         real phi_int = t_min*phi(perm[ind_min]) + (1.0-t_min)*phi(perm[(ind_min+1)%kp]);
         real psi_int = t_min*psi(perm[ind_min]) + (1.0-t_min)*psi(perm[(ind_min+1)%kp]);
