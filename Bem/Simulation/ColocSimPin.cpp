@@ -511,13 +511,13 @@ void ColocSimPin::remesh(real L) {
         borderprojects.trigs.push_back(Triplet(trigind_offset,trigind_offset+2,trigind_offset+3));
         trigind_offset += 4;
 
-        real phi_int = t_min*phi(ind_min) + (1.0-t_min)*phi((ind_min+1)%kp);
-        real psi_int = t_min*psi(ind_min) + (1.0-t_min)*psi((ind_min+1)%kp);
+        real phi_int = t_min*phi(perm[ind_min]) + (1.0-t_min)*phi(perm[(ind_min+1)%kp]);
+        real psi_int = t_min*psi(perm[ind_min]) + (1.0-t_min)*psi(perm[(ind_min+1)%kp]);
 
         borderpots.push_back(0.0);
-        borderpots.push_back(phi(ind_min));
+        borderpots.push_back(phi(perm[ind_min]));
         borderpots.push_back(phi_int);
-        borderpots.push_back(phi((ind_min+1)%kp));
+        borderpots.push_back(phi(perm[(ind_min+1)%kp]));
 
         
         
