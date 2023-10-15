@@ -527,18 +527,17 @@ void ColocSimPin::remesh(real L) {
         new_psi.push_back(psi_int);
     }
 
+    borderprojects.add(mesh); // add the old mesh!
+    for(auto const& elm : make_copy(phi)) {
+        borderpots.push_back(elm);
+    }
+
+    export_ply_float("borderprojects/mesh-"+to_string(index++)+".ply",borderprojects,borderpots);
 
     mesh = new_mesh;
 
     set_phi(new_phi);
     set_psi(new_psi);
-
-    borderprojects.add(new_mesh);
-    for(auto const& elm : new_phi) {
-        borderpots.push_back(elm);
-    }
-
-    export_ply_float("borderprojects/mesh-"+to_string(index++)+".ply",borderprojects,borderpots);
 
     //if(mesh.check_validity()) cout << "valid." << endl;
 
