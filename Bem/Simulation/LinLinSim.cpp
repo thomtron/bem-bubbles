@@ -202,7 +202,7 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
                 xf[i].x = x0*exp(cx/x0*dt);
                 flag = true;
             } else {
-                real t_e = (eps - x1[i].x)/cx;
+                real t_e = (eps - x0)/cx;
                 if(abs(t_e) < abs(dt)) { // if particle would pass epsilon-line
                     xf[i].x = eps*exp(cx/eps*(dt - t_e));
                     flag = true;
