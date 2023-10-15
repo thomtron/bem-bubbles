@@ -14,7 +14,7 @@ class ColocSimPin : public LinLinSim {
 public:
 
     ColocSimPin(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
-        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(0) {
+        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(0),index(0) {
             N_pin = set_x_boundary(mesh);
             // The Simulation assumes that the last N_pin vertices of the Mesh initial are pinned, which means they do not change their position throughout
             // the simulation. Furthermore it is assumed that the vertices are pinned on an infinite flat plane; these vertices thus must lie in the same plane.
@@ -46,6 +46,8 @@ public:
     //PotVec   pot_t_multi(Mesh const& m,CoordVec const& gradients, real t) const;
 
     size_t N_pin;
+
+    size_t index;
     
     void rearrange_boundary(Mesh& M,std::vector<bool> bound) const;
     size_t set_x_boundary(Mesh& M) const;

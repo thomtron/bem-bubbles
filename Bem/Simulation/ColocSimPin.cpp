@@ -446,6 +446,10 @@ void ColocSimPin::remesh(real L) {
         
     } while(ha != hb);
 
+    Mesh borderprojects;
+    size_t trigind_offset = 0;
+    PotVec borderpots;
+
     for(size_t i(0);i<N_pin;++i) {
 
         // project the pinned ones too on to the old ring
@@ -472,6 +476,7 @@ void ColocSimPin::remesh(real L) {
         
         bool first(true);
         size_t kp(perm.size());
+        vec3 pos_a,pos_b;
         for(size_t j(0);j<kp;j++) {
             vec3 k = mesh.verts[perm[(j+1)%kp]] - mesh.verts[perm[j]]; // boundary element vector
             vec3 O = mesh.verts[perm[j]] - pos;
@@ -486,15 +491,35 @@ void ColocSimPin::remesh(real L) {
                     s_min = s;
                     t_min = t;
                     ind_min = j;
+                    pos_a = mesh.verts[perm[j]];
+                    pos_b = mesh.verts[perm[(j+1)%kp]];
                 }
             }
         }
         if(first) throw(out_of_range("project_and_interpolate: no intersection at boundary"));
 
+        vec3 old_pos = pos - nor*0.2;
+
         pos += s_min*nor;
+
+        borderprojects.verts.push_back(old_pos);
+        borderprojects.verts.push_back(pos_a);
+        borderprojects.verts.push_back(pos);
+        borderprojects.verts.push_back(pos_b);
+
+        borderprojects.trigs.push_back(Triplet(trigind_offset,trigind_offset+1,trigind_offset+2));
+        borderprojects.trigs.push_back(Triplet(trigind_offset,trigind_offset+2,trigind_offset+3));
+        trigind_offset += 4;
 
         real phi_int = t_min*phi(ind_min) + (1.0-t_min)*phi((ind_min+1)%kp);
         real psi_int = t_min*psi(ind_min) + (1.0-t_min)*psi((ind_min+1)%kp);
+
+        borderpots.push_back(0.0);
+        borderpots.push_back(phi(ind_min));
+        borderpots.push_back(phi_int);
+        borderpots.push_back(phi((ind_min+1)%kp));
+
+        
         
 
         new_mesh.verts.push_back(pos);
@@ -502,10 +527,18 @@ void ColocSimPin::remesh(real L) {
         new_psi.push_back(psi_int);
     }
 
+
     mesh = new_mesh;
 
     set_phi(new_phi);
     set_psi(new_psi);
+
+    borderprojects.add(new_mesh);
+    for(auto const& elm : new_phi) {
+        borderpots.push_back(elm);
+    }
+
+    export_ply_float("borderprojects/mesh-"+to_string(index++)+".ply",borderprojects,borderpots);
 
     //if(mesh.check_validity()) cout << "valid." << endl;
 
