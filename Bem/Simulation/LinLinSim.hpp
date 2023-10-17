@@ -72,6 +72,8 @@ public:
 
 protected:
 
+    void test_negative() const;
+
     std::vector<vec3> generate_tangent_gradients(Mesh const& m, std::vector<real> const& pot) const;
 
     std::vector<real> curvature_param() const;

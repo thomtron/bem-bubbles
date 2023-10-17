@@ -253,6 +253,9 @@ size_t ColocSimPin::set_x_boundary(Mesh& M) const {
 
 void ColocSimPin::remesh(real L) {
 
+    cout << "begin remesh" << endl;
+    test_negative();
+
     //export_mesh("before_remesh.ply");
     //cout << "           before" << endl;
     
@@ -571,6 +574,9 @@ void ColocSimPin::remesh(real L) {
     //} else {
     //    throw("shit");
     //}
+
+    cout << "end_remesh" << endl;
+    test_negative();
 }
 
 /* presumably there is no need to change...

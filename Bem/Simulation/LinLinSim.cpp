@@ -145,8 +145,24 @@ vector<real> LinLinSim::kappa(Mesh const& m) const {
     return result;
 }
 
+void LinLinSim::test_negative() const {
+    bool negative = false;
+    for(vec3 const& elm : mesh.verts) {
+        if(elm.x < 0.0)
+            negative = true;
+    }
+
+    if(negative) {
+        cout << "negative values occured" << endl;
+        throw(out_of_range("negative values"));
+    }
+}
+
 void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     // note, position_t is the heavy function here that solves the BEM problem.
+
+    cout << "begin_RK4" << endl;
+    test_negative();
 
     Mesh m2 = mesh;
     Mesh m3 = mesh;
@@ -242,6 +258,9 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     // update phi
     set_phi(pf);
     time += dt;
+
+    cout << "end_RK4" << endl;
+    test_negative();
 }
 
 // evolving the system in time with the Euler method. Alternatively evolve_system_RK4 can be used.
@@ -266,6 +285,8 @@ void LinLinSim::evolve_system(real dp, bool fixdt) {
     set_phi(p + dt*pot_derivative);
     
     time += dt;
+
+
 
 }
 
