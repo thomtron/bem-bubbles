@@ -21,6 +21,7 @@ public:
 
     LinLinSim(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
         :Simulation(initial,p_inf,epsilon,sigma,gamma,pressurefield),
+        eps(1e-2),
         damping_factor(0.0),
         min_elm_size(0.0),
         max_elm_size(std::numeric_limits<real>::max()) {
@@ -70,7 +71,11 @@ public:
 
     PotVec exterior_pot(CoordVec const& positions) const;
 
+    CoordVec nopenetration(real eps, real dt,CoordVec const& x0,CoordVec& c) const;
+
 protected:
+
+    real eps;
 
     void test_negative() const;
 

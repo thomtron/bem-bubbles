@@ -158,6 +158,39 @@ void LinLinSim::test_negative() const {
     }
 }
 
+
+CoordVec LinLinSim::nopenetration(real eps, real dt,CoordVec const& x0,CoordVec& c) const {
+    CoordVec xf = x0 + dt*c;
+    size_t nb(0);
+    for(size_t i(0);i<x0.size();++i) {
+        real cx = c[i].x;
+        if(cx*dt < 0.0) { // only if point may penetrate wall
+            bool flag = false;
+            real xpos = x0[i].x;
+            if(xpos < eps) {
+                xf[i].x = xpos*exp(cx/xpos*dt);
+                flag = true;
+            } else {
+                real t_e = (eps - xpos)/cx;
+                if(abs(t_e) < abs(dt)) { // if particle would pass epsilon-line
+                    xf[i].x = eps*exp(cx/eps*(dt - t_e));
+                    flag = true;
+                }
+            }
+
+            if(flag) {
+                c[i].x = (xf[i].x - xpos)/dt; // update the velocity for the psi-calculation
+                nb ++;
+            }
+        }
+    }
+    if(nb > 0) cout << "applied exponential " << nb << " times.      ##" << endl;
+
+    return xf;
+}
+
+
+
 void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     // note, position_t is the heavy function here that solves the BEM problem.
 
@@ -202,49 +235,9 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     
     CoordVec average = (k1_x + 2.0*k2_x + 2.0*k3_x + k4_x)*(1.0/6.0);
 
-
-    CoordVec xf = x1 + dt*average;
-
-
-#ifdef NOPENETRATION
-    real eps = 1e-2;
-    size_t nb(0);
-    for(size_t i(0);i<x1.size();++i) {
-        real cx = average[i].x;
-        if(cx*dt < 0.0) { // only if point may penetrate wall
-            bool flag = false;
-            real x0 = x1[i].x;
-            if(x0 < eps) {
-                xf[i].x = x0*exp(cx/x0*dt);
-                flag = true;
-            } else {
-                real t_e = (eps - x0)/cx;
-                if(abs(t_e) < abs(dt)) { // if particle would pass epsilon-line
-                    xf[i].x = eps*exp(cx/eps*(dt - t_e));
-                    flag = true;
-                }
-            }
-
-            if(flag) {
-                average[i].x = (xf[i].x - x0)/dt; // update the velocity for the psi-calculation
-                nb ++;
-            }
-
-            /*
-            if(t_e < 0.0) { // if x1.x < eps
-                xf[i].x = x1[i].x*exp(cx/x1[i].x*dt);
-            } 
-            else if(t_e < dt) { // if particle passed epsilon-line
-                xf[i].x = eps*exp(cx/eps*(dt - t_e)); // set it to exponential function
-                cout << "applied exponential.                   flag:  ////////" << endl;
-            }*/
-        }
-    }
-    if(nb > 0) cout << "applied exponential " << nb << " times.      ##" << endl;
-#endif
-
     PotVec pf = p1 + (dt/6.0)*(pot_t_multi(mesh,k1_x,time) + 2.0*pot_t_multi(m2,k2_x,time) + 2.0*pot_t_multi(m3,k3_x,time) + pot_t_multi(m4,k4_x,time));
-    mesh.verts = xf;
+    
+    mesh.verts = nopenetration(eps,dt,x1,average);
 
     // set a value for psi (after we updated mesh)
     if(psi.size() != average.size()) cout << "psi: " << psi.size() << " - new-psi: " << average.size() << "          XXXXX" << endl; 

@@ -60,8 +60,9 @@ function init() {
     scene.add(axes);
     scene.rotation.x = - Math.PI / 2;
 
-    camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
-    camera.position.set(10,0,0);
+    camera = new THREE.PerspectiveCamera( 30, container.clientWidth / container.clientHeight, 0.1, 1000 );
+
+    camera.position.set(0,5,0);
 
     cameraTarget = new THREE.Vector3( 0, 0, 0 );
 

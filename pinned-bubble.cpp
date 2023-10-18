@@ -115,7 +115,9 @@ int main() {
             vector<size_t> inds(sim.mesh.verts.size() - sim.N_pin);
             iota(inds.begin(),inds.end(),0);
             PotVec pot = sim.get_phi();
-            sim.mesh = l2smooth(sim.mesh,pot,inds);
+            Mesh smoothed = l2smooth(sim.mesh,pot,inds);
+            CoordVec c = smoothed.verts + (-1.0)*sim.mesh.verts;
+            sim.mesh.verts = sim.nopenetration(1e-2,1.0,sim.mesh.verts,c);
             sim.set_phi(pot);
             cout << "smoothed" << endl;
             //if(i%12 == 0) {

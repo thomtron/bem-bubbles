@@ -1,0 +1,3 @@
+ - put the typedef "CoordVec" into the Mesh class. 
+   It makes sense to have it there and leads to more 
+   consistent ecriture.
