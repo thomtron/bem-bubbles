@@ -382,7 +382,11 @@ void ColocSimPin::remesh(real L) {
 
     // projecting the new vertices back on the original surface
 
+    CoordVec x0 = new_mesh.verts;
     project_and_interpolate(new_mesh,normals,new_phi,new_psi, mesh, make_copy(phi), make_copy(psi));
+
+    CoordVec c = new_mesh.verts + (-1.0)*x0;
+    new_mesh.verts = nopenetration(eps,1.0,x0,c);
 
     //cout << "did i survive so far?d" << endl;
 

@@ -1395,7 +1395,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         // current fit. then obtain distance of point to edges -> use linear weights
         // for averaging the positions obtained through the three fits.
 
-/* temporarily out for testing purposes!
+///* temporarily out for testing purposes!
         FittingTool A,B,C;
         #pragma omp critical 
         {
@@ -1419,7 +1419,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         Pa = A.get_position(Pa.x,Pa.y);
         Pb = B.get_position(Pb.x,Pb.y);
         Pc = C.get_position(Pc.x,Pc.y);
-*/
+//*/
 
         // now we want to determine the coordinates of projected_pos
         // with respect to the usual triangle coordinates of the 
@@ -1451,7 +1451,7 @@ void project_and_interpolate(Mesh& mesh,vector<vec3> const& vertex_normals, vect
         q = (x1*b0 - b1*x0)/(a1*b0-a0*b1); // q and r are well defined if a and b aren't collinear
         r = (a1*x0 - a0*x1)/(a1*b0-a0*b1);
 
-        // projected_pos = (1.0 - q)*Pa + (q - r)*Pb + r*Pc; // this one too temporarily out
+        projected_pos = (1.0 - q)*Pa + (q - r)*Pb + r*Pc; // this one too temporarily out
 
         #pragma omp critical 
         {
