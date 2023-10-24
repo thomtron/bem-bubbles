@@ -90,8 +90,8 @@ int main() {
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
-    sim.set_damping_factor(0.3);
-    sim.set_minimum_element_size(0.05);
+    sim.set_damping_factor(0.1);
+    sim.set_minimum_element_size(0.01);
     sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
