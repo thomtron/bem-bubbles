@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 15e3; // Pa
-    string folder = "pinned/f=30e3_r=128e-6_p=15e3_beta=0.1_rem=0.15_epsilon=1e-2-phi_rem-new_try/";
+    string folder = "pinned-beta/f=30e3_r=128e-6_p=15e3_beta=1.0_rem=0.15_epsilon=1e-2/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -90,8 +90,8 @@ int main() {
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
-    sim.set_damping_factor(0.1);
-    sim.set_minimum_element_size(0.01);
+    sim.set_damping_factor(0.3);
+    sim.set_minimum_element_size(0.2);
     sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
