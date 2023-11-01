@@ -36,8 +36,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 128e-6; // m
-    Bem::real pressure = 15e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=128e-6_p=15e3_beta=0.5_rem=0.1_epsilon=1e-2/";
+    Bem::real pressure = 10e3; // Pa
+    string folder = "pinned-beta/f=30e3_r=128e-6_p=10e3_beta=0.5_rem=0.1_epsilon=1e-2/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
