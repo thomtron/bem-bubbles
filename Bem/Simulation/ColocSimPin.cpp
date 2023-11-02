@@ -123,7 +123,7 @@ void ColocSimPin::assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh 
 #endif
 }
 
-const real beta = 0.5;
+const real beta = 1.0;
 //constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
 const real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
 
