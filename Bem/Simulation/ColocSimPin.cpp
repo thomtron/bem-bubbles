@@ -127,11 +127,12 @@ const real beta = 0.2;
 //constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
 const real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
 
+const real c_nonlinear = 0.1;
 
 // costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface
 // and normal is surf normal at contact line)
 real drift_velocity(real costheta) {
-    return beta*(costheta_eq - costheta);
+    return beta*(costheta_eq - costheta) + c_nonlinear*(costheta*costheta*costheta)/(costheta*costheta - 1.0);
 }
 
 
