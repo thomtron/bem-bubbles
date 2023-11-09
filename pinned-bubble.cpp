@@ -36,8 +36,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 128e-6; // m
-    Bem::real pressure = 10e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=128e-6_p=10e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01/";
+    Bem::real pressure = 8e3; // Pa
+    string folder = "pinned-beta/f=30e3_r=128e-6_p=8e3_beta=0.2_rem=0.15_epsilon=1e-2_b-nonlin-0.01/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.1;
+    Bem::real remesh_coeff = 0.15;
 
     sim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
