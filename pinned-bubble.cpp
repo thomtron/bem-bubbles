@@ -37,7 +37,7 @@ int main() {
 
     Bem::real radius   = 128e-6; // m
     Bem::real pressure = 8e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=128e-6_p=8e3_beta=0.2_rem=0.15_epsilon=1e-2_b-nonlin-0.01/";
+    string folder = "pinned-beta/f=30e3_r=128e-6_p=8e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.001/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -97,7 +97,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.15;
+    Bem::real remesh_coeff = 0.12;
 
     sim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
