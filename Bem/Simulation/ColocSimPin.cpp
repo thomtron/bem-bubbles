@@ -127,7 +127,7 @@ const real beta = 0.2;
 //constexpr real costheta_eq = cos(106.0/180.0*M_PI); // = cos(106°)
 const real costheta_eq = cos(130.0/180.0*M_PI); // = cos(106°)
 
-const real c_nonlinear = 0.001;
+const real c_nonlinear = 0.01;
 
 // costheta = normal * (1,0,0) = normal.x (angle taken from interior of buble to interface
 // and normal is surf normal at contact line)
