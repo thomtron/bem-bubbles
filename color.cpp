@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     implemented below
     */
 
-   if(argc != 4 && argc != 6) {
+    if(argc != 4 && argc != 6) {
         cerr << "invalid number of arguments!" << endl;
         return 1;
     }

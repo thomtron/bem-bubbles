@@ -35,9 +35,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 128e-6; // m
-    Bem::real pressure = 12e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=128e-6_p=12e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01/";
+    Bem::real radius   = 75e-6; // m 
+    Bem::real pressure = 6e3; // Pa
+    string folder = "pinned-beta/f=30e3_r=75e-6_p=6e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -71,6 +71,7 @@ int main() {
 
     Bem::real duration_max = 60.0*5;         // seconds
     
+    cout << "t_ref =      " << t_ref << endl;
     cout << "P_ref =      " << P_ref << endl;
     cout << "Sigma =      " << Sigma << endl;
     cout << "P_gas0 =     " << P_gas0 << endl;

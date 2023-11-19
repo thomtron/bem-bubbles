@@ -28,6 +28,9 @@ target_link_libraries(pot-ext simulation integration mesh)
 add_executable(color color.cpp)
 target_link_libraries(color mesh)
 
+add_executable(radius radius.cpp)
+target_link_libraries(radius mesh)
+
 add_executable(pinned-bubble pinned-bubble.cpp)
 target_link_libraries(pinned-bubble simulation integration mesh)
 

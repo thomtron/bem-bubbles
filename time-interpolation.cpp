@@ -56,7 +56,9 @@ int main(int argc, char *argv[]) {
     size_t current_index = 0;
     size_t new_index = 0;
     for(Bem::real time(0.0); time <= t.back(); time += dt) {
-        while(abs(t[current_index+1]-time) < abs(t[current_index]-time)) current_index++;
+        while(abs(t[current_index+1]-time) <= abs(t[current_index]-time)) current_index++; 
+        // <= for the case that two consecutive times are the same due to rounding (can happen
+        // in extreme situations where dt nearly goes to zero, remeshing normally helps and the sim can continue)
         
         Mesh M;
         vector<Bem::real> phi,psi;
