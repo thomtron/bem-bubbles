@@ -21,7 +21,9 @@ void relax_vertices (Mesh& mesh);
 void relax_vertices (HalfedgeMesh& mesh);
 
 bool trace_mesh(Mesh const& mesh,vec3 pos,vec3 dir,vec3& result,size_t& trig_index);
-void project   (Mesh& mesh, Mesh const& other);
+bool trace_mesh_positive(Mesh const& mesh,vec3 pos,vec3 dir,vec3& result,size_t& trig_index);
+void project(Mesh& mesh, Mesh const& other);
+void project_from_origin(std::vector<vec3>& normals, Mesh const& other, real const& dist_to_wall);
 void project_and_interpolate(Mesh& mesh, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
 void project_and_interpolate(Mesh& mesh, std::vector<vec3> const& vertex_normals, std::vector<real>& f_res, Mesh const& other, std::vector<real> const& f);
 void project_and_interpolate(Mesh& mesh, std::vector<vec3> const& vertex_normals, std::vector<real>& f_res, std::vector<real>& f_2_res, Mesh const& other, std::vector<real> const& f, std::vector<real> const& f_2);

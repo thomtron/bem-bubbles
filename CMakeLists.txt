@@ -55,4 +55,7 @@ target_link_libraries(oscillations simulation integration mesh)
 add_executable(remeshing-for-spherical-harmonics remeshing-for-spherical-harmonics.cpp)
 target_link_libraries(remeshing-for-spherical-harmonics mesh)
 
+add_executable(remeshing-for-spherical-harmonics-pinned remeshing-for-spherical-harmonics-pinned.cpp)
+target_link_libraries(remeshing-for-spherical-harmonics-pinned mesh)
+
 include_directories(${EIGEN_INCLUDE})

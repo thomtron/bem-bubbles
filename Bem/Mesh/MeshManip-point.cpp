@@ -1005,11 +1005,50 @@ void trace_mesh(Mesh const& mesh,vec3 pos,vec3 dir,vec3& result,size_t& trig_ind
     }
 }
 
+// same function as above, but allowing only positive s. 
+bool trace_mesh_positive(Mesh const& mesh,vec3 pos,vec3 dir,vec3& result,size_t& trig_index) {
+    real s_min = 0.0;
+
+    bool found(false);
+    
+    size_t m(mesh.trigs.size());
+
+    for(size_t j(0);j<m;++j) {
+        Triplet t(mesh.trigs[j]);
+
+        vec3 a(mesh.verts[t.b]-mesh.verts[t.a]);
+        vec3 b(mesh.verts[t.c]-mesh.verts[t.b]);
+        vec3 c(mesh.verts[t.a]-mesh.verts[t.c]);
+
+        vec3 n(a.vec(b));
+
+        real s = n.dot(mesh.verts[t.a]-pos)/n.dot(dir);
+
+        if(j == 0) s_min = s;
+
+        vec3 x = pos + s*dir;
+
+        // find the position with minimal s - parameter
+        if(s > 0.0 and s < s_min) { 
+            if(     (mesh.verts[t.a]-x).vec(a).dot(n) >= 0
+                and (mesh.verts[t.b]-x).vec(b).dot(n) >= 0
+                and (mesh.verts[t.c]-x).vec(c).dot(n) >= 0 ) {
+                    s_min = s;
+                    result = x;
+                    trig_index = j;
+
+                    found = true;
+            }
+        }
+    }
+    return found;
+}
+
 // this funciton projects all vertices of one mesh on the surface defined by
 // the mesh 'other' by applying the function trace_mesh
 void project(Mesh& mesh, Mesh const& other) {
     // normalized vertex normals
-    vector<vec3> normals = generate_vertex_normals(mesh);
+    vector<vec3> normals = generate_vertex_normals(mesh); // not nice!!
 
     size_t n(mesh.verts.size());
 
@@ -1036,7 +1075,7 @@ void project(Mesh& mesh, Mesh const& other) {
 
         vec3 projected_pos;
 
-        size_t index(0);
+        size_t index(0); // dummy variable
 
         trace_mesh(local_other,local_mesh.verts[i],local_normals[i],projected_pos,index);
 
@@ -1048,6 +1087,52 @@ void project(Mesh& mesh, Mesh const& other) {
 
     mesh.verts.clear();
     mesh.verts = new_vertices;
+}
+
+// same function as above, but starting from origin and setting tracing-attempts without
+// result to zero.
+void project_from_origin(std::vector<vec3>& normals, Mesh const& other, real const& dist_to_wall) {
+    
+    size_t n(normals.size());
+
+    omp_set_num_threads(100);
+
+    #pragma omp parallel
+    {
+
+    Mesh local_other;
+    vector<vec3> local_normals;
+
+    #pragma omp critical 
+    {
+        local_normals = normals;
+        local_other = other;
+    }
+
+
+    #pragma omp for
+    for(size_t i = 0;i<n;++i) {
+
+        vec3 projected_pos;
+
+        size_t index(0); // dummmy variable
+
+        bool found = trace_mesh_positive(local_other,vec3(),local_normals[i],projected_pos,index);
+
+        #pragma omp critical 
+        {
+        
+        if(found) {
+            normals[i] = projected_pos
+         } else {
+            normals[i] = local_normals[i]*dist_to_wall;
+            normals[i].x = 0.0;
+         }
+
+        }
+    }
+
+    }
 }
 
 
