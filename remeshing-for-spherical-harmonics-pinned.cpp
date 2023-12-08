@@ -60,8 +60,8 @@ int main(int argc, char *argv[]) {
     // my_uv.verts are the normals to my_uv !
     project_from_origin(my_uv.verts,m,com.z);
 
-    export_ply("prepared-mesh-sh.ply",my_uv);
-    export_ply("base-mesh-sh.ply",m);
+    //export_ply("prepared-mesh-sh.ply",my_uv);
+    //export_ply("base-mesh-sh.ply",m);
 
     // filling up a .csv table with the distances of the points to the origin:
     ofstream output(filename_raw + ".csv");
