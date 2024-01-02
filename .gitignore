@@ -44,6 +44,9 @@ build
 # temporarily:
 python_utils/vis_II
 
+# node modules:
+python_utils/website-II/node_modules
+
 # images
 *.png
 

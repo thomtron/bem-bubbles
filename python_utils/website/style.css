@@ -1,0 +1,90 @@
+body {
+    margin: 0;
+    background-color: lightsteelblue;
+}
+
+#CanvasContainer {
+    width: 100%;
+    height: 700px;
+    margin: 0 auto;
+    border-style: solid;
+    border-radius: 2px;
+    border-color: darkslategrey;
+    box-sizing: border-box;
+}
+
+#frameselector {
+    width: 100%;
+}
+
+#wrapper {
+    width: 80%;
+    margin: 20px auto;
+    background-color: azure;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 20px;
+}
+
+#ColorControl {
+    width: 100%;
+    position: relative;
+    height: 60px;
+}
+
+.boundaryvalue {
+    background-color: lightsteelblue;
+    position: relative;
+    border-style: none;
+    height: 20px;
+    width: 50px;
+    top: 40px;
+}
+
+
+#colorgradient {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+    height: 40px;
+}
+
+.colorslider {
+    -webkit-appearance: none;
+    margin: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: none;
+    pointer-events: none;
+}
+
+.colorslider::-webkit-slider-runnable-track { 
+    background: none;
+    width: 100%;
+    height: 100%;
+}
+.colorslider::-moz-range-track {
+    background: none;
+    width: 100%;
+    height: 100%;
+}
+
+.colorslider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 10px; /* Set a specific slider handle width */
+    height: 40px; /* Slider handle height */
+    background: #000000; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+    pointer-events: auto;
+}
+
+.colorslider::-moz-range-thumb {
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #04AA6D; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+    pointer-events: auto;
+}
