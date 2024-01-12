@@ -6,12 +6,13 @@ import { DragControls } from 'three/addons/controls/DragControls.js';
 
 let container = document.getElementById("CanvasContainer");
 let slider = document.getElementById("frameselector");
+let loading = document.getElementById("loading");
 
 let stats, orbitControls, dragControls;
 
 let camera, cameraTarget, scene, renderer;
 let bubbles = new THREE.Group();
-//bubbles.visible = false;
+
 
 // make only the 
 slider.oninput = (event) => {
@@ -22,8 +23,6 @@ slider.oninput = (event) => {
 
 
 init();
-//set_frame(10); // doesn't work right now, since ply's not loaded at this point
-//animate();
 draw();
 
 
@@ -32,6 +31,7 @@ let index_list = [];
 
 function thingsToDo() {
     console.log('I do them now.');
+    bubbles.visible = true;
     bubbles.children.forEach((child)=> {
         index_list.push(child.frame_index);
     });
@@ -40,6 +40,7 @@ function thingsToDo() {
     slider.value = 0;
     set_frame(0);
     draw();
+    loading.textContent = '';
 }
 
 const loader = new PLYLoader();
@@ -49,9 +50,13 @@ let fileList = [];
 let remaining = {};
 
 fileInput.addEventListener('change', (e)=> { 
+
+    bubbles.remove(...bubbles.children);
+    bubbles.visible = false; // dont show anything while loading.
     
     fileList = [];
     remaining.val = fileInput.files.length;
+    remaining.start = remaining.val;
     for(let i = 0; i < fileInput.files.length; i++) {
         fileList.push(fileInput.files[i]);
     }
@@ -66,7 +71,19 @@ fileInput.addEventListener('change', (e)=> {
         switch(ext) {
             case 'ply':
                 readPlyFile(loader,fileList[i],bubbles,()=>{
-                    checkFinish(remaining,thingsToDo);
+                    checkFinish(remaining,thingsToDo,(val)=>{
+                        let resolution = 20;
+                        let num_x = Math.floor(val*resolution);
+                        let str = '';
+                        for(let i = 0; i<resolution;i++) {
+                            if(i < num_x) {
+                                str += 'x';
+                            } else {
+                                str += 'o';
+                            }
+                        }
+                        loading.textContent = str;
+                    });
                 });
             break;
 
@@ -96,13 +113,14 @@ fileInput.addEventListener('change', (e)=> {
 
 });
 
-function checkFinish(counter,callback) {
+function checkFinish(counter,finished,progress=()=>{}) {
     if(counter.val <= 0) {
         console.log('error: counter below or equal zero.');
     } else {
         counter.val--;
+        progress((counter.start-counter.val)/counter.start);
         if(counter.val == 0) {
-            callback();
+            finished();
         }
     }   
 }
@@ -193,7 +211,7 @@ function init() {
     // Lights
 
     //scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
-    scene.add(new THREE.AmbientLight(0xffffff));
+    scene.add(new THREE.AmbientLight(0xffffff,3.0));
 
     //addShadowedLight( 1, 0, 0, 0xffffff, 1.35 );
     //addShadowedLight( 0.5, 1, - 1, 0xffaa00, 1 );
@@ -230,6 +248,12 @@ function init() {
         orbitControls.enabled = true
         event.object.material.opacity = 1
     });
+}
+
+function addDirectionalLight( x, y, z, color, intensity ) {
+    const directionalLight = new THREE.DirectionalLight( color, intensity );
+    directionalLight.position.set( x, y, z );
+    scene.add( directionalLight );
 }
 
 function addShadowedLight( x, y, z, color, intensity ) {

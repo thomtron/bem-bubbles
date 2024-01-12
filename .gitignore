@@ -59,3 +59,4 @@ python_utils/website-II/node_modules
 
 # many .csv's
 *.csv
+!init_conditions/*.csv
