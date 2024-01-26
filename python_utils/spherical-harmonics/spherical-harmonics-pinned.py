@@ -24,9 +24,8 @@ def generate_sh_coeffs(i):
     y = pysh.expand.SHExpandDH(x,sampling=2)
 
     modulus = np.sqrt(y[0]**2 + y[1]**2)
-
     
-    return ind,np.concatenate((modulus[:,0],np.diagonal(modulus))),i-2
+    return ind,np.concatenate((modulus[:,0],np.diagonal(modulus))) #,i-2
 
 # code that runs power spectrum generation in parallel for all 
 # files given in the arguments (except the first two). The second
@@ -36,7 +35,7 @@ with Pool(48) as p:
     output = p.map(generate_sh_coeffs, range(2,len(sys.argv)))
 
 for i,out in enumerate(output):
-    S[out[2]] = out[1]
+    S[out[0]] = out[1]
 
 # write output
 S = np.asarray(S)

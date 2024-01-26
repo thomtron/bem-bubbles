@@ -58,9 +58,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 92e-6; // m 
-    Bem::real pressure = 0.6e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=92e-6_p=0.6e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01/";
+    Bem::real radius   = 65e-6; // m 
+    Bem::real pressure = 12e3; // Pa
+    string folder = "pinned-beta/f=30e3_r=65e-6_p=12e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-env/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -171,6 +171,11 @@ int main() {
         if(duration > duration_max) {
             cout << "duration limit for one iteration surpassed! - ending simulation." << endl;
             N = i+1;
+            break;
+        }
+
+        if(sim.get_time()*t_ref > 0.0025) {
+            cout << "maximum physical simulation time reached." << endl;
             break;
         }
         
