@@ -59,8 +59,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 92e-6; // m 
-    Bem::real pressure = 1e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=92e-6_p=1e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01/";
+    Bem::real pressure = 0.6e3; // Pa
+    string folder = "pinned-beta/f=30e3_r=92e-6_p=0.6e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -72,7 +72,7 @@ int main() {
     Bem::real sigma = 0.07275;    // N/m    surface tension                      @ 20°C https://de.wikipedia.org/wiki/Oberfl%C3%A4chenspannung
     Bem::real r0 = radius;        // m      initial radius = reference length    from Versluis_2010
     Bem::real c = 1481.0;         // m/s    sound speed of water                 @ 20°C https://en.wikipedia.org/wiki/Speed_of_sound  -  no good source...
-    Bem::real f = 30e3;         // Hz     acoustic frequency                   from Versluis_2010
+    Bem::real f = 30e3;           // Hz     acoustic frequency                   from Versluis_2010
     Bem::real l = c/f;            // m      acoustic wavelength
     Bem::real pa = pressure;      // N/m^2  acoustic pressure amplitude          from Versluis_2010
     Bem::real p_vap = 2300.0;     // N/m^2  water vapour pressure                @ 20°C https://en.wikipedia.org/wiki/Vapor_pressure
