@@ -9,6 +9,6 @@ do
     ./remeshing-for-spherical-harmonics-pinned $ply
 done
 
-python ../python_utils/spherical-harmonics/spherical-harmonics-pinned.py $dir/sh-coeffs.csv $dir/mesh*.csv
+/home/thomas/miniconda3/envs/bemviz/bin/python ../python_utils/spherical-harmonics/spherical-harmonics-pinned.py $dir/sh-coeffs.csv $dir/mesh*.csv
 
     

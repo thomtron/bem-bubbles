@@ -2,6 +2,7 @@
 #include <vector>
 #include <numeric>
 #include <chrono>
+#include <algorithm> // for clamp
 
 #include "Bem/basic/Bem.hpp"
 #include "Bem/Mesh/Mesh.hpp"
@@ -23,6 +24,10 @@ Bem::real waveform(vec3 x,Bem::real t) {
 
 // THINK ABOUT THE MIRRORING OF THE NODES AT X=0 !!
 
+Bem::real smoothstep(Bem::real edge0,Bem::real edge1, Bem::real x) {
+    x = clamp((x-edge0)/(edge1-edge0),0.0,1.0);
+    return x*x*(3.0 - 2.0*x);
+}
 
 vector<Bem::real> load_scalar_vector(string const& fname) {
     vector<Bem::real> data;
@@ -49,8 +54,9 @@ int main() {
     Mesh M;
     import_ply("../init_conditions/init-pinned.ply",M);
 
-    vector<Bem::real> h_ampl = load_scalar_vector("../init_conditions/r_env.csv");
-    vector<Bem::real> t_ampl = load_scalar_vector("../init_conditions/t_env.csv");
+    // loading envelope from .csv
+    //vector<Bem::real> h_ampl = load_scalar_vector("../init_conditions/r_env.csv");
+    //vector<Bem::real> t_ampl = load_scalar_vector("../init_conditions/t_env.csv");
 
     // perfect!
 
@@ -60,7 +66,7 @@ int main() {
 
     Bem::real radius   = 130e-6; // m 
     Bem::real pressure = 12e3; // Pa
-    string folder = "pinned-beta/f=30e3_r=130e-6_p=12e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-env/";
+    string folder = "pinned-beta/f=30e3_r=130e-6_p=12e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-smo/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -130,13 +136,14 @@ int main() {
 
     size_t substeps = 4;
     for(size_t i(0);i<N;++i){
-        Pa = interpolate(t_ampl,h_ampl,sim.get_time()*t_ref)*Pa_amp;
+        //Pa = interpolate(t_ampl,h_ampl,sim.get_time()*t_ref)*Pa_amp;
+        Pa = smoothstep(0.0,0.00015,sim.get_time()*t_ref)*Pa_amp;
 
         cout << "\n----------\nCURRENT INDEX: " << i << "\n----------\n\n";
         
         cout << "sim-time: " << sim.get_time() << ", volume/V_0: " << sim.get_volume()/V_0 << ", # elements: " << sim.mesh.verts.size()<< endl;
         
-        output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << interpolate(t_ampl,h_ampl,sim.get_time()*t_ref) << endl;
+        output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << Pa << endl;
         sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
 
         if(i%6 == 0){
@@ -174,14 +181,15 @@ int main() {
             break;
         }
 
-        if(sim.get_time()*t_ref > 0.0025) {
+        if(sim.get_time()*t_ref > 0.01) {
             cout << "maximum physical simulation time reached." << endl;
+            N = i+1;
             break;
         }
         
         
     }
-    output << N << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << interpolate(t_ampl,h_ampl,sim.get_time()*t_ref) << endl;
+    output << N << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << Pa << endl;
     sim.export_mesh(folder+"mesh-"+to_string(N)+".ply");
 
 
