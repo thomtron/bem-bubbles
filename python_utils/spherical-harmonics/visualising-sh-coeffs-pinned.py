@@ -19,10 +19,10 @@ print(times.shape,coeffs.shape)
 fig = plt.figure()
 ax = fig.add_subplot(2,1,1)
 
-for i in range(6,7):
+for i in range(16):
     ax.plot(times,coeffs[:,i])
 #ax.set_yscale('log') # sometimes the log view is clearer
-ax.legend(list(map(str,range(6,7))))
+ax.legend(list(map(str,range(16))))
 ax.set_ylim([0.0,0.2])
 ax.set_title(f"zonal")
 
@@ -30,10 +30,10 @@ ax.set_title(f"zonal")
 
 ax = fig.add_subplot(2,1,2)
 
-for i in range(38,39):
+for i in range(32,48):
     ax.plot(times,coeffs[:,i])
 #ax.set_yscale('log') # sometimes the log view is clearer
-ax.legend(list(map(str,range(6,7))))
+ax.legend(list(map(str,range(16))))
 ax.set_ylim([0.0,0.2])
 ax.set_title(f"sectoral")
 
