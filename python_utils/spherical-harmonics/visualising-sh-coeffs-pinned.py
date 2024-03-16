@@ -19,22 +19,24 @@ print(times.shape,coeffs.shape)
 fig = plt.figure()
 ax = fig.add_subplot(2,1,1)
 
-for i in range(16):
+myrange = np.array(range(2,8))
+
+for i in myrange:
     ax.plot(times,coeffs[:,i])
 #ax.set_yscale('log') # sometimes the log view is clearer
-ax.legend(list(map(str,range(16))))
-ax.set_ylim([0.0,0.2])
+ax.legend(list(map(str,myrange)))
+ax.set_ylim([0.0,0.125])
 ax.set_title(f"zonal")
 
 
 
 ax = fig.add_subplot(2,1,2)
 
-for i in range(32,48):
+for i in myrange+32:
     ax.plot(times,coeffs[:,i])
 #ax.set_yscale('log') # sometimes the log view is clearer
-ax.legend(list(map(str,range(16))))
-ax.set_ylim([0.0,0.2])
+ax.legend(list(map(str,myrange)))
+ax.set_ylim([0.0,0.125])
 ax.set_title(f"sectoral")
 
 """
