@@ -41,9 +41,7 @@ t_rp = np.arange(N)*dt*t_ref*1000*1.0 # entspricht 15% decrease von Eigenfrequen
 
 
 
-
-
-data = np.fromfile('radius-time.txt',sep=';').reshape((-1,2))
+data = np.fromfile('radius-time-N6.txt',sep=';').reshape((-1,2))
 
 fig = plt.figure()
 ax = fig.add_subplot()
