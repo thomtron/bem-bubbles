@@ -240,7 +240,7 @@ void LinLinSim::evolve_system_RK4(real dp, bool fixdt) {
     mesh.verts = nopenetration(eps,dt,x1,average);
 
     // set a value for psi (after we updated mesh)
-    if(psi.size() != average.size()) cout << "psi: " << psi.size() << " - new-psi: " << average.size() << "          XXXXX" << endl; 
+    if(size_t(psi.size()) != average.size()) cout << "psi: " << psi.size() << " - new-psi: " << average.size() << "          XXXXX" << endl; 
     PotVec new_psi(average.size());
     vector<vec3> normals = generate_vertex_normals(mesh);
     for(size_t i(0);i<average.size();++i) {

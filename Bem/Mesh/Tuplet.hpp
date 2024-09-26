@@ -14,11 +14,11 @@ public:
             }
         }
 
-    bool operator==(Tuplet const& other) {
+    bool operator==(Tuplet const& other) const {
         return (a==other.a and b==other.b); 
     }
 
-    bool operator<(Tuplet const& other) { // "alphabetical" order
+    bool operator<(Tuplet const& other) const { // "alphabetical" order
         if(a<other.a) return true;
         if(a==other.a) return b<other.b;
         return false;
@@ -30,10 +30,6 @@ public:
 private:
     size_t a,b;
 };
-
-bool operator<(Tuplet const& a,Tuplet const& b) {
-    return a<b;
-}
 
 } // namespace Bem
 
