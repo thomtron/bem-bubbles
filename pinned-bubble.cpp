@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <numeric>
 #include <chrono>
@@ -144,7 +145,9 @@ int main() {
         cout << "sim-time: " << sim.get_time() << ", volume/V_0: " << sim.get_volume()/V_0 << ", # elements: " << sim.mesh.verts.size()<< endl;
         
         output << i << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << Pa << endl;
-        sim.export_mesh(folder+"mesh-"+to_string(i)+".ply");
+        stringstream fname;
+        fname << folder << "mesh-" << setw(6) << setfill('0') << i << ".ply";
+        sim.export_mesh(fname.str());
 
         if(i%6 == 0){
             vector<size_t> inds(sim.mesh.verts.size() - sim.N_pin);
@@ -190,7 +193,9 @@ int main() {
         
     }
     output << N << ';' << sim.get_time() << ';' << sim.get_time()*t_ref << ';' << Pa << endl;
-    sim.export_mesh(folder+"mesh-"+to_string(N)+".ply");
+    stringstream fname;
+    fname << folder << "mesh-" << setw(6) << setfill('0') << N << ".ply";
+    sim.export_mesh(fname.str());
 
 
     output.close();
