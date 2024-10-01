@@ -63,7 +63,10 @@ int main(int argc, char *argv[]) {
         Mesh M;
         vector<Bem::real> phi,psi;
 
-        cout << system(("cp "+dir+"mesh-"+to_string(current_index)+".ply "+dir+"interpolated/mesh-"+to_string(new_index)+".ply").c_str());
+        stringstream fname1,fname2;
+        fname1 << "mesh-" << setw(6) << setfill('0') << current_index << ".ply";
+        fname2 << "mesh-" << setw(6) << setfill('0') << new_index << ".ply";
+        cout << system(("cp "+dir+fname1.str()+' '+dir+"interpolated/"+fname2.str()).c_str());
 
         new_times << new_index << ';' << t_code[current_index] << ';' << t[current_index] << endl;
 
