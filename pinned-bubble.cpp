@@ -66,8 +66,8 @@ int main() {
     // following lines borrowed from oscillations.cpp
 
     Bem::real radius   = 85e-6; // m 
-    Bem::real pressure = 1e3; // Pa
-    string folder = "/cluster/home/threnggli/results/f=30e3_r=85e-6_p=1e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-smo/";
+    Bem::real pressure = 1.3e3; // Pa
+    string folder = "/cluster/home/threnggli/results/f=30e3_r=85e-6_p=1.3e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-smo/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
