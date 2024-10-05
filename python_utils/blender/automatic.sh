@@ -3,12 +3,11 @@
 mkdir -p $3/$4
 
 # blender 3.3
-$blender = blender
+$blender=blender
 
 # results dir
-$results = /cluster/home/threnggli/results
+$results=/cluster/home/threnggli/results
 
-$dir = pwd
 
 for i in $(seq -f "%06g" $1 $2); do
     echo rendering $i
