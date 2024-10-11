@@ -65,9 +65,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 70e-6; // m 
-    Bem::real pressure = 10e3; // Pa
-    string folder = "/cluster/home/threnggli/results/f=30e3_r=70e-6_p=10e3_beta=0.2_rem=0.12_epsilon=1e-2_b-nonlin-0.01-smo/";
+    Bem::real radius   = 115e-6; // m 
+    Bem::real pressure = 13e3; // Pa
+    string folder = "/cluster/home/threnggli/results/f=30e3_r=115e-6_p=13e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -128,7 +128,7 @@ int main() {
 
     ofstream output(folder+"times.csv");
 
-    Bem::real remesh_coeff = 0.12;
+    Bem::real remesh_coeff = 0.1;
 
     sim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
