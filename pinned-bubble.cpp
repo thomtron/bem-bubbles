@@ -65,9 +65,9 @@ int main() {
 
     // following lines borrowed from oscillations.cpp
 
-    Bem::real radius   = 115e-6; // m 
-    Bem::real pressure = 13e3; // Pa
-    string folder = "/cluster/home/threnggli/results/f=30e3_r=115e-6_p=13e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo/";
+    Bem::real radius   = 135e-6; // m 
+    Bem::real pressure = 20e3; // Pa
+    string folder = "/cluster/home/threnggli/results/f=30e3_r=135e-6_p=20e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -122,7 +122,7 @@ int main() {
     sim.set_min_dt(0.1*M_PI/Omega);
     sim.set_phi(0.0);
     sim.set_damping_factor(0.5);
-    sim.set_minimum_element_size(0.2);
+    sim.set_minimum_element_size(0.15); // before: 0.2
     sim.set_maximum_element_size(0.9);
     Bem::real V_0(sim.get_volume());
 
