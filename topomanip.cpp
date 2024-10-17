@@ -14,21 +14,21 @@ int main() {
     string outfile = dir + "mesh-001681_cut_fixed.ply";
 
     Mesh r;
-    vector<real> phi_r,psi_r;
+    vector<Bem::real> phi_r,psi_r;
     import_ply(reference,r,phi_r,psi_r);
 
     Mesh n;
-    vector<real> phi_n,psi_n;
+    vector<Bem::real> phi_n,psi_n;
     import_ply(newfile,n);
 
     cout << n.verts.size() << endl;
 
     for(vec3 const& elm_n : n.verts) {
         //cout << elm_n << endl;
-        real min_dist = (r.verts[0] - elm_n).norm2();
+        Bem::real min_dist = (r.verts[0] - elm_n).norm2();
         size_t index = 0;
         for(size_t i(1);i<r.verts.size();++i) {
-            real dist = (r.verts[i] - elm_n).norm2();
+            Bem::real dist = (r.verts[i] - elm_n).norm2();
             if(dist < min_dist) {
                 min_dist = dist;
                 index = i;
