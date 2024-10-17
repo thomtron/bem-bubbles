@@ -58,4 +58,10 @@ target_link_libraries(remeshing-for-spherical-harmonics mesh)
 add_executable(remeshing-for-spherical-harmonics-pinned remeshing-for-spherical-harmonics-pinned.cpp)
 target_link_libraries(remeshing-for-spherical-harmonics-pinned mesh)
 
+add_executable(topomanip topomanip.cpp)
+target_link_libraries(topomanip mesh)
+
+add_executable(pinned-bubble-restart pinned-bubble-restart.cpp)
+target_link_libraries(pinned-bubble-restart simulation integration mesh)
+
 include_directories(${EIGEN_INCLUDE})

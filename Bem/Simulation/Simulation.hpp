@@ -117,6 +117,10 @@ public:
         return psi(index);
     }
 
+    void set_time(real const& value) {
+        time = value;
+    }
+    
     real get_time() const {
         return time;
     }
