@@ -15,7 +15,8 @@ public:
 
     ColocSimPin(Mesh const& initial,real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0,real (*pressurefield)(vec3 x,real t) = &default_field)
         :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(0),index(0) {
-            N_pin = set_x_boundary(mesh);
+            N_pin = set_x_boundary(mesh); // This is a problem! if one wants to initialize the simulation with phi and psi !!!
+
             // The Simulation assumes that the last N_pin vertices of the Mesh initial are pinned, which means they do not change their position throughout
             // the simulation. Furthermore it is assumed that the vertices are pinned on an infinite flat plane; these vertices thus must lie in the same plane.
             // Only the first N-N_pin vertices act as colocation points such that the resulting linear system is again exactly determined (not overdetermined).
@@ -36,6 +37,17 @@ public:
 #endif
         }
 
+    ColocSimPin(Mesh const& initial, PotVec phi_init, PotVec psi_init, real p_inf = 1.0, real epsilon = 1.0, real sigma = 0.0, real gamma = 1.0, real (*pressurefield)(vec3 x,real t) = &default_field)
+        :LinLinSim(initial,p_inf,epsilon,sigma,gamma,pressurefield),N_pin(0),index(0) {
+            N_pin = set_x_boundary(mesh,phi_init,psi_init);
+            set_phi(phi_init);
+            set_psi(psi_init);
+            
+#ifdef VERBOSE
+            std::cout << "This simulation has linear elements for phi and psi." << std::endl;
+#endif
+        }
+
     virtual ~ColocSimPin() {}
 
     virtual void assemble_matrices(Eigen::MatrixXd& G,Eigen::MatrixXd& H, Mesh const& m) const override;
@@ -50,6 +62,7 @@ public:
     size_t index;
     
     void rearrange_boundary(Mesh& M,std::vector<bool> bound) const;
+    size_t set_x_boundary(Mesh& M, PotVec& phi_t, PotVec& psi_t) const;
     size_t set_x_boundary(Mesh& M) const;
 
 };

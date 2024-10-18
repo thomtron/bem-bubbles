@@ -220,6 +220,40 @@ void ColocSimPin::rearrange_boundary(Mesh& M,vector<bool> bound) const {
     }
 }
 
+size_t ColocSimPin::set_x_boundary(Mesh& M, PotVec& phi_init, PotVec& psi_init) const {
+    vector<size_t> permutation(M.verts.size());
+    vector<size_t> inverse_permutation(M.verts.size());
+    iota(permutation.begin(),permutation.end(),0);
+    vector<vec3>& pos(M.verts);
+    size_t k(pos.size());
+    size_t npin(0);
+    real threshold = 1e-5;
+    for(size_t i(0);i<k;++i) {
+        if(abs(pos[i].x)<threshold) {
+            pos[i].x = 0.0;
+            swap(permutation[i],permutation[k-1]);
+            swap(pos[i],pos[k-1]);
+            swap(phi_init[i],phi_init[k-1]);
+            swap(psi_init[i],psi_init[k-1]);
+            i--;
+            k--;
+            npin++;
+        }
+    }
+    for(size_t i(0);i<permutation.size();++i) {
+        inverse_permutation[permutation[i]] = i;
+    }
+    for(size_t i(0);i<M.trigs.size();++i) {
+        Triplet trig(M.trigs[i]);
+        trig.a = inverse_permutation[trig.a];
+        trig.b = inverse_permutation[trig.b];
+        trig.c = inverse_permutation[trig.c];
+        M.trigs[i] = trig;
+    }
+    cout << "npin = " << npin << endl;
+    return npin;
+}
+
 size_t ColocSimPin::set_x_boundary(Mesh& M) const {
     vector<size_t> permutation(M.verts.size());
     vector<size_t> inverse_permutation(M.verts.size());

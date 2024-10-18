@@ -119,10 +119,8 @@ int main() {
     Bem::real dp = 0.005;
     size_t N(10000);
     
-    ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
+    ColocSimPin sim(M,phi_M,psi_M,P_ref,P_gas0,Sigma,Gamma,&waveform);
     sim.set_min_dt(0.1*M_PI/Omega);
-    sim.set_phi(phi_M);
-    sim.set_psi(psi_M);
     sim.set_time(50.6327);
     sim.set_damping_factor(0.5);
     sim.set_minimum_element_size(0.15); // before: 0.2
@@ -133,7 +131,7 @@ int main() {
 
     Bem::real remesh_coeff = 0.1;
 
-    sim.remesh(remesh_coeff);
+    //sim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
 
     Bem::real Pa_amp = Pa;
