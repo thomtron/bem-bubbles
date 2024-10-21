@@ -54,7 +54,8 @@ Bem::real interpolate(vector<Bem::real> const& t,vector<Bem::real> const& x, Bem
 int main() {
     Mesh M;
     PotVec phi_M,psi_M;
-    import_ply("/cluster/home/threnggli/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine/mesh-001681_cut_fixed.ply",M,phi_M,psi_M);
+    //import_ply("/cluster/home/threnggli/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine/mesh-001681_cut_fixed.ply",M,phi_M,psi_M);
+    import_ply("/home/thomas/Documents/ma-thesis/paper/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine/mesh-001681_cut_fixed.ply",M,phi_M,psi_M);
 
     // loading envelope from .csv
     //vector<Bem::real> h_ampl = load_scalar_vector("../init_conditions/r_env.csv");
@@ -68,7 +69,8 @@ int main() {
 
     Bem::real radius   = 120e-6; // m 
     Bem::real pressure = 9.4e3; // Pa
-    string folder = "/cluster/home/threnggli/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine-restart/";
+    //string folder = "/cluster/home/threnggli/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine-restart/";
+    string folder = "/home/thomas/Documents/ma-thesis/paper/results/f=30e3_r=120e-6_p=9.4e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine-restart/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -131,7 +133,7 @@ int main() {
 
     Bem::real remesh_coeff = 0.1;
 
-    //sim.remesh(remesh_coeff);
+    //makesim.remesh(remesh_coeff);
     //sim.remesh(remesh_coeff); // wegen grosser auflösungsdifferenz
 
     Bem::real Pa_amp = Pa;
