@@ -67,7 +67,7 @@ int main() {
 
     Bem::real radius   = 70e-6; // m 
     Bem::real pressure = 15e3; // Pa
-    string folder = "/cluster/home/threnggli/results/f=30e3_r=70e-6_p=15e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine-slow/";
+    string folder = "/cluster/home/threnggli/results/f=30e3_r=70e-6_p=15e3_beta=0.2_rem=0.1_epsilon=1e-2_b-nonlin-0.01-smo-fine-slow-II/";
     
     cout << "radius:   " << radius << endl;
     cout << "pressure: " << pressure << endl;
@@ -115,7 +115,7 @@ int main() {
 
     
     
-    Bem::real dp = 0.002;
+    Bem::real dp = 0.003;
     size_t N(10000);
     
     ColocSimPin sim(M,P_ref,P_gas0,Sigma,Gamma,&waveform);
